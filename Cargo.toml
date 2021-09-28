@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "pbjson",
+  "pbjson-build",
+  "pbjson-test",
+  "pbjson-types",
+]
