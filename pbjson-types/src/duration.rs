@@ -6,7 +6,7 @@ impl TryFrom<Duration> for std::time::Duration {
     type Error = std::num::TryFromIntError;
 
     fn try_from(value: Duration) -> Result<Self, Self::Error> {
-        Ok(std::time::Duration::new(
+        Ok(Self::new(
             value.seconds.try_into()?,
             value.nanos.try_into()?,
         ))

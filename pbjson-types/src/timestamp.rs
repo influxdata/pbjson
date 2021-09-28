@@ -9,7 +9,7 @@ impl TryFrom<Timestamp> for chrono::DateTime<Utc> {
         let Timestamp { seconds, nanos } = value;
 
         let dt = NaiveDateTime::from_timestamp(seconds, nanos.try_into()?);
-        Ok(DateTime::<Utc>::from_utc(dt, Utc))
+        Ok(Self::from_utc(dt, Utc))
     }
 }
 
