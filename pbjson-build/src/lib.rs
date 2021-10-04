@@ -107,6 +107,18 @@ impl Builder {
         }
     }
 
+    /// Configures the output directory where generated Rust files will be written.
+    ///
+    /// If unset, defaults to the `OUT_DIR` environment variable. `OUT_DIR` is set by Cargo when
+    /// executing build scripts, so `out_dir` typically does not need to be configured.
+    pub fn out_dir<P>(&mut self, path: P) -> &mut Self
+    where
+        P: Into<PathBuf>,
+    {
+        self.out_dir = Some(path.into());
+        self
+    }
+
     /// Register an encoded `FileDescriptorSet` with this `Builder`
     pub fn register_descriptors(&mut self, descriptors: &[u8]) -> Result<&mut Self> {
         self.descriptors.register_encoded(descriptors)?;
