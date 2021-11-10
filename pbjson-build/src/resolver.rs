@@ -15,8 +15,8 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    /// Lookup an extern type, returns the rust type followed by the remaining
-    /// number of path segments to skip
+    /// Lookup an extern type, returns the rust path followed by the number of
+    /// leading path segments to skip (they are already included in the rust path)
     fn resolve_extern(&self, path: &TypePath) -> Option<(String, usize)> {
         let mut match_len = 0_usize;
         let mut match_idx = None;
@@ -40,7 +40,7 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    /// Returns the rust type for `path` relative to `cur`
+    /// Returns the rust type for `path`
     pub fn rust_type(&self, path: &TypePath) -> String {
         let (mut ret, skip) = match self.resolve_extern(path) {
             Some(x) => x,
