@@ -79,22 +79,28 @@
     clippy::future_not_send
 )]
 
-use crate::descriptor::{Descriptor, DescriptorSet, Package};
-use crate::generator::{generate_enum, generate_message, Config};
-use crate::message::resolve_message;
 use std::io::{BufWriter, Error, ErrorKind, Result, Write};
 use std::path::PathBuf;
+
+use crate::descriptor::{Descriptor, DescriptorSet, Package};
+use crate::message::resolve_message;
+use crate::{
+    generator::{generate_enum, generate_message},
+    resolver::Resolver,
+};
 
 mod descriptor;
 mod escape;
 mod generator;
 mod message;
+mod resolver;
 
 #[derive(Debug, Default)]
 pub struct Builder {
     descriptors: descriptor::DescriptorSet,
     exclude: Vec<String>,
     out_dir: Option<PathBuf>,
+    extern_paths: Vec<(String, String)>,
 }
 
 impl Builder {
@@ -104,6 +110,7 @@ impl Builder {
             descriptors: DescriptorSet::new(),
             exclude: Default::default(),
             out_dir: None,
+            extern_paths: Default::default(),
         }
     }
 
@@ -131,6 +138,17 @@ impl Builder {
         prefixes: I,
     ) -> &mut Self {
         self.exclude.extend(prefixes.into_iter().map(Into::into));
+        self
+    }
+
+    /// Declare an externally provided Protobuf package or type
+    pub fn extern_path(
+        &mut self,
+        proto_path: impl Into<String>,
+        rust_path: impl Into<String>,
+    ) -> &mut Self {
+        self.extern_paths
+            .push((proto_path.into(), rust_path.into()));
         self
     }
 
@@ -171,18 +189,14 @@ impl Builder {
         prefixes: &[S],
         mut write_factory: F,
     ) -> Result<Vec<(Package, W)>> {
-        let config = Config {
-            extern_types: Default::default(),
-        };
-
         let iter = self.descriptors.iter().filter(move |(t, _)| {
             let exclude = self
                 .exclude
                 .iter()
-                .any(|prefix| t.matches_prefix(prefix.as_ref()));
+                .any(|prefix| t.prefix_match(prefix.as_ref()).is_some());
             let include = prefixes
                 .iter()
-                .any(|prefix| t.matches_prefix(prefix.as_ref()));
+                .any(|prefix| t.prefix_match(prefix.as_ref()).is_some());
             include && !exclude
         });
 
@@ -198,13 +212,15 @@ impl Builder {
                 }
             };
 
+            let resolver = Resolver::new(&self.extern_paths, type_path.package());
+
             match descriptor {
                 Descriptor::Enum(descriptor) => {
-                    generate_enum(&config, type_path, descriptor, writer)?
+                    generate_enum(&resolver, type_path, descriptor, writer)?
                 }
                 Descriptor::Message(descriptor) => {
                     if let Some(message) = resolve_message(&self.descriptors, descriptor) {
-                        generate_message(&config, &message, writer)?
+                        generate_message(&resolver, &message, writer)?
                     }
                 }
             }

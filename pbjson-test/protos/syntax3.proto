@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package test.syntax3;
 
+import "common.proto";
+import "external.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -75,4 +77,12 @@ message KitchenSink {
 
   google.protobuf.Duration duration = 37;
   google.protobuf.Timestamp timestamp = 38;
+
+  // An externally defined message
+  test.external.ExternMessage external_message = 39;
+  test.external.ExternEnumeration external_enum = 40;
+
+  // Messages from an external package
+  test.common.CommonMessage common_message = 41;
+  test.common.CommonEnumeration common_enum = 42;
 }

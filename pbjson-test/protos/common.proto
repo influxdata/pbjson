@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package test.common;
+
+message CommonMessage {
+
+}
+
+enum CommonEnumeration {
+  UNKNOWN = 0;
+  A = 1;
+}

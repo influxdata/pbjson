@@ -1,11 +1,45 @@
-include!(concat!(env!("OUT_DIR"), "/test.syntax3.rs"));
-include!(concat!(env!("OUT_DIR"), "/test.syntax3.serde.rs"));
+use serde::{Deserialize, Serialize};
+
+/// A test of an externally defined message
+#[derive(Clone, PartialEq, ::prost::Message, Serialize, Deserialize)]
+pub struct ExternMessage {}
+
+/// A test of an externally defined enumeration
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    ::prost::Enumeration,
+    Serialize,
+    Deserialize,
+)]
+#[repr(i32)]
+pub enum ExternEnumeration {
+    Unknown = 0,
+}
+
+pub mod test {
+    pub mod syntax3 {
+        include!(concat!(env!("OUT_DIR"), "/test.syntax3.rs"));
+        include!(concat!(env!("OUT_DIR"), "/test.syntax3.serde.rs"));
+    }
+    pub mod common {
+        include!(concat!(env!("OUT_DIR"), "/test.common.rs"));
+        include!(concat!(env!("OUT_DIR"), "/test.common.serde.rs"));
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use chrono::TimeZone;
     use pbjson_types::{Duration, Timestamp};
+    use test::syntax3::*;
 
     #[test]
     fn test_empty() {

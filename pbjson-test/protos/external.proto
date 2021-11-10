@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package test.external;
+
+message ExternMessage {
+
+}
+
+enum ExternEnumeration {
+  UNKNOWN = 0;
+  A = 1;
+}
