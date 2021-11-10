@@ -1,6 +1,6 @@
 [package]
 name = "pbjson-test"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
 edition = "2018"
 description = "Test resources for pbjson converion"
