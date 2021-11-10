@@ -6,26 +6,27 @@
 
 use super::{
     write_deserialize_end, write_deserialize_start, write_serialize_end, write_serialize_start,
-    Config, Indent,
+    Indent,
 };
 use crate::descriptor::{EnumDescriptor, TypePath};
 use crate::generator::write_fields_array;
+use crate::resolver::Resolver;
 use std::io::{Result, Write};
 
 pub fn generate_enum<W: Write>(
-    config: &Config,
+    resolver: &Resolver<'_>,
     path: &TypePath,
     descriptor: &EnumDescriptor,
     writer: &mut W,
 ) -> Result<()> {
-    let rust_type = config.rust_type(path);
+    let rust_type = resolver.rust_type(path);
 
     let variants: Vec<_> = descriptor
         .values
         .iter()
         .map(|variant| {
             let variant_name = variant.name.clone().unwrap();
-            let rust_variant = config.rust_variant(path, &variant_name);
+            let rust_variant = resolver.rust_variant(path, &variant_name);
             (variant_name, rust_variant)
         })
         .collect();
