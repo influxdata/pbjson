@@ -1,0 +1,28 @@
+[advisories]
+ignore = [
+    # title: Potential segfault in the time crate
+    # why needed: used by `chrono`
+    # upstream issue: https://github.com/chronotope/chrono/issues/553
+    "RUSTSEC-2020-0071",
+
+    # title: Potential segfault in `localtime_r` invocations
+    # why needed: bug in `chrono`
+    # upstream issue: https://github.com/chronotope/chrono/issues/499
+    "RUSTSEC-2020-0159",
+]
+
+[output]
+deny = [
+    "unmaintained",
+    "unsound",
+    "yanked",
+]
+quiet = false
+
+[yanked]
+# interaction of workspace-local crates and crates.io is currently broken
+# see https://github.com/rustsec/rustsec/issues/232
+enabled = false
+
+# currently broken on CircleCI due to https://github.com/rustsec/rustsec/issues/292
+update_index = false
