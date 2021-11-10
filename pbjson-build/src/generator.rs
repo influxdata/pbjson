@@ -1,10 +1,7 @@
 //! This module contains the actual code generation logic
 
-use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::io::{Result, Write};
-
-use crate::descriptor::TypePath;
 
 mod enumeration;
 mod message;
@@ -21,51 +18,6 @@ impl Display for Indent {
             write!(f, "    ")?;
         }
         Ok(())
-    }
-}
-
-#[derive(Debug)]
-pub struct Config {
-    pub extern_types: BTreeMap<TypePath, String>,
-}
-
-impl Config {
-    fn rust_type(&self, path: &TypePath) -> String {
-        if let Some(t) = self.extern_types.get(path) {
-            return t.clone();
-        }
-
-        let mut ret = String::new();
-        let path = path.path();
-        assert!(!path.is_empty(), "path cannot be empty");
-
-        for i in &path[..(path.len() - 1)] {
-            ret.push_str(i.to_snake_case().as_str());
-            ret.push_str("::");
-        }
-        ret.push_str(path.last().unwrap().to_camel_case().as_str());
-        ret
-    }
-
-    fn rust_variant(&self, enumeration: &TypePath, variant: &str) -> String {
-        use heck::CamelCase;
-        assert!(
-            variant
-                .chars()
-                .all(|c| matches!(c, '0'..='9' | 'A'..='Z' | '_')),
-            "illegal variant - {}",
-            variant
-        );
-
-        // TODO: Config to disable stripping prefix
-
-        let enumeration_name = enumeration.path().last().unwrap().to_shouty_snake_case();
-        let variant = match variant.strip_prefix(&enumeration_name) {
-            Some("") => variant,
-            Some(stripped) => stripped,
-            None => variant,
-        };
-        variant.to_camel_case()
     }
 }
 

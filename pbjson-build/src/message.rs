@@ -246,7 +246,7 @@ fn resolve_type(descriptors: &DescriptorSet, type_name: &str) -> FieldType {
     );
     let maybe_descriptor = descriptors
         .iter()
-        .find(|(path, _)| path.matches_prefix(type_name));
+        .find(|(path, _)| path.prefix_match(type_name).is_some());
 
     match maybe_descriptor {
         Some((path, Descriptor::Enum(_))) => FieldType::Enum(path.clone()),

@@ -27,26 +27,27 @@ use crate::message::{Field, FieldModifier, FieldType, Message, OneOf, ScalarType
 
 use super::{
     write_deserialize_end, write_deserialize_start, write_serialize_end, write_serialize_start,
-    Config, Indent,
+    Indent,
 };
 use crate::descriptor::TypePath;
 use crate::generator::write_fields_array;
+use crate::resolver::Resolver;
 
 pub fn generate_message<W: Write>(
-    config: &Config,
+    resolver: &Resolver<'_>,
     message: &Message,
     writer: &mut W,
 ) -> Result<()> {
-    let rust_type = config.rust_type(&message.path);
+    let rust_type = resolver.rust_type(&message.path);
 
     // Generate Serialize
     write_serialize_start(0, &rust_type, writer)?;
-    write_message_serialize(config, 2, message, writer)?;
+    write_message_serialize(resolver, 2, message, writer)?;
     write_serialize_end(0, writer)?;
 
     // Generate Deserialize
     write_deserialize_start(0, &rust_type, writer)?;
-    write_deserialize_message(config, 2, message, &rust_type, writer)?;
+    write_deserialize_message(resolver, 2, message, &rust_type, writer)?;
     write_deserialize_end(0, writer)?;
     Ok(())
 }
@@ -81,7 +82,7 @@ fn write_field_empty_predicate<W: Write>(member: &Field, writer: &mut W) -> Resu
 }
 
 fn write_message_serialize<W: Write>(
-    config: &Config,
+    resolver: &Resolver<'_>,
     indent: usize,
     message: &Message,
     writer: &mut W,
@@ -89,11 +90,11 @@ fn write_message_serialize<W: Write>(
     write_struct_serialize_start(indent, message, writer)?;
 
     for field in &message.fields {
-        write_serialize_field(config, indent, field, writer)?;
+        write_serialize_field(resolver, indent, field, writer)?;
     }
 
     for one_of in &message.one_ofs {
-        write_serialize_one_of(indent, config, one_of, writer)?;
+        write_serialize_one_of(indent, resolver, one_of, writer)?;
     }
 
     write_struct_serialize_end(indent, writer)
@@ -163,13 +164,13 @@ fn write_struct_serialize_end<W: Write>(indent: usize, writer: &mut W) -> Result
 }
 
 fn write_decode_variant<W: Write>(
-    config: &Config,
+    resolver: &Resolver<'_>,
     indent: usize,
     value: &str,
     path: &TypePath,
     writer: &mut W,
 ) -> Result<()> {
-    writeln!(writer, "{}::from_i32({})", config.rust_type(path), value)?;
+    writeln!(writer, "{}::from_i32({})", resolver.rust_type(path), value)?;
     write!(
         writer,
         "{}.ok_or_else(|| serde::ser::Error::custom(format!(\"Invalid variant {{}}\", {})))",
@@ -191,7 +192,7 @@ struct Variable<'a> {
 }
 
 fn write_serialize_variable<W: Write>(
-    config: &Config,
+    resolver: &Resolver<'_>,
     indent: usize,
     field: &Field,
     variable: Variable<'_>,
@@ -212,7 +213,7 @@ fn write_serialize_variable<W: Write>(
                 FieldModifier::Repeated => {
                     writeln!(writer, "{}.iter().cloned().map(|v| {{", variable.raw)?;
                     write!(writer, "{}", Indent(indent + 1))?;
-                    write_decode_variant(config, indent + 2, "v", path, writer)?;
+                    write_decode_variant(resolver, indent + 2, "v", path, writer)?;
                     writeln!(writer)?;
                     write!(
                         writer,
@@ -220,7 +221,7 @@ fn write_serialize_variable<W: Write>(
                         Indent(indent + 1)
                     )
                 }
-                _ => write_decode_variant(config, indent + 1, variable.as_unref, path, writer),
+                _ => write_decode_variant(resolver, indent + 1, variable.as_unref, path, writer),
             }?;
 
             writeln!(writer, "?;")?;
@@ -257,7 +258,7 @@ fn write_serialize_variable<W: Write>(
                 FieldType::Enum(path) => {
                     writeln!(writer, "{}.map(|(k, v)| {{", Indent(indent + 1))?;
                     write!(writer, "{}let v = ", Indent(indent + 2))?;
-                    write_decode_variant(config, indent + 3, "*v", path, writer)?;
+                    write_decode_variant(resolver, indent + 3, "*v", path, writer)?;
                     writeln!(writer, "?;")?;
                     writeln!(writer, "{}Ok((k, v))", Indent(indent + 2))?;
                     writeln!(
@@ -334,7 +335,7 @@ fn write_serialize_scalar_variable<W: Write>(
 }
 
 fn write_serialize_field<W: Write>(
-    config: &Config,
+    resolver: &Resolver<'_>,
     indent: usize,
     field: &Field,
     writer: &mut W,
@@ -348,7 +349,7 @@ fn write_serialize_field<W: Write>(
 
     match &field.field_modifier {
         FieldModifier::Required => {
-            write_serialize_variable(config, indent, field, variable, writer)?;
+            write_serialize_variable(resolver, indent, field, variable, writer)?;
         }
         FieldModifier::Optional => {
             writeln!(
@@ -362,14 +363,14 @@ fn write_serialize_field<W: Write>(
                 as_unref: "*v",
                 raw: "v",
             };
-            write_serialize_variable(config, indent + 1, field, variable, writer)?;
+            write_serialize_variable(resolver, indent + 1, field, variable, writer)?;
             writeln!(writer, "{}}}", Indent(indent))?;
         }
         FieldModifier::Repeated | FieldModifier::UseDefault => {
             write!(writer, "{}if ", Indent(indent))?;
             write_field_empty_predicate(field, writer)?;
             writeln!(writer, " {{")?;
-            write_serialize_variable(config, indent + 1, field, variable, writer)?;
+            write_serialize_variable(resolver, indent + 1, field, variable, writer)?;
             writeln!(writer, "{}}}", Indent(indent))?;
         }
     }
@@ -378,7 +379,7 @@ fn write_serialize_field<W: Write>(
 
 fn write_serialize_one_of<W: Write>(
     indent: usize,
-    config: &Config,
+    resolver: &Resolver<'_>,
     one_of: &OneOf,
     writer: &mut W,
 ) -> Result<()> {
@@ -395,7 +396,7 @@ fn write_serialize_one_of<W: Write>(
             writer,
             "{}{}::{}(v) => {{",
             Indent(indent + 2),
-            config.rust_type(&one_of.path),
+            resolver.rust_type(&one_of.path),
             field.rust_type_name(),
         )?;
         let variable = Variable {
@@ -403,7 +404,7 @@ fn write_serialize_one_of<W: Write>(
             as_unref: "*v",
             raw: "v",
         };
-        write_serialize_variable(config, indent + 3, field, variable, writer)?;
+        write_serialize_variable(resolver, indent + 3, field, variable, writer)?;
         writeln!(writer, "{}}}", Indent(indent + 2))?;
     }
 
@@ -412,7 +413,7 @@ fn write_serialize_one_of<W: Write>(
 }
 
 fn write_deserialize_message<W: Write>(
-    config: &Config,
+    resolver: &Resolver<'_>,
     indent: usize,
     message: &Message,
     rust_type: &str,
@@ -468,12 +469,12 @@ fn write_deserialize_message<W: Write>(
         writeln!(writer, "{}match k {{", Indent(indent + 3))?;
 
         for field in &message.fields {
-            write_deserialize_field(config, indent + 4, field, None, writer)?;
+            write_deserialize_field(resolver, indent + 4, field, None, writer)?;
         }
 
         for one_of in &message.one_ofs {
             for field in &one_of.fields {
-                write_deserialize_field(config, indent + 4, field, Some(one_of), writer)?;
+                write_deserialize_field(resolver, indent + 4, field, Some(one_of), writer)?;
             }
         }
 
@@ -628,7 +629,7 @@ fn write_fields_enum<'a, W: Write, I: Iterator<Item = &'a str>>(
 }
 
 fn write_deserialize_field<W: Write>(
-    config: &Config,
+    resolver: &Resolver<'_>,
     indent: usize,
     field: &Field,
     one_of: Option<&OneOf>,
@@ -667,7 +668,7 @@ fn write_deserialize_field<W: Write>(
         write!(
             writer,
             "{}::{}(",
-            config.rust_type(&one_of.path),
+            resolver.rust_type(&one_of.path),
             field.rust_type_name()
         )?;
     }
@@ -681,14 +682,14 @@ fn write_deserialize_field<W: Write>(
                 write!(
                     writer,
                     "map.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect()",
-                    config.rust_type(path)
+                    resolver.rust_type(path)
                 )?;
             }
             _ => {
                 write!(
                     writer,
                     "map.next_value::<{}>()? as i32",
-                    config.rust_type(path)
+                    resolver.rust_type(path)
                 )?;
             }
         },
@@ -733,7 +734,7 @@ fn write_deserialize_field<W: Write>(
                     panic!("bytes are not currently supported as map values")
                 }
                 FieldType::Enum(path) => {
-                    write!(writer, "{}", config.rust_type(path))?;
+                    write!(writer, "{}", resolver.rust_type(path))?;
                     "v as i32"
                 }
                 FieldType::Map(_, _) => panic!("protobuf disallows nested maps"),
