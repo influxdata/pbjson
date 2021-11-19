@@ -2,7 +2,7 @@
 name = "pbjson"
 version = "0.2.1"
 authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
-edition = "2018"
+edition = "2021"
 description = "Utilities for pbjson conversion"
 license = "MIT"
 keywords = ["protobuf", "json", "serde"]
