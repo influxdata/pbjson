@@ -24,6 +24,13 @@ message KitchenSink {
     B = 20;
   }
 
+  enum MixedCase {
+    MixedCaseUnknown = 0;
+    MixedCASEA = 1;
+    MixEdCaseB = 2;
+    c = 3;
+  }
+
   int32 i32 = 1;
   optional int32 optional_i32 = 2;
   repeated int32 repeated_i32 = 3;
@@ -85,4 +92,6 @@ message KitchenSink {
   // Messages from an external package
   test.common.CommonMessage common_message = 41;
   test.common.CommonEnumeration common_enum = 42;
+
+  MixedCase mixed_case = 43;
 }

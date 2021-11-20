@@ -37,6 +37,7 @@ pub mod test {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test::syntax3::kitchen_sink::MixedCase;
     use chrono::TimeZone;
     use pbjson_types::{Duration, Timestamp};
     use test::syntax3::*;
@@ -294,5 +295,17 @@ mod tests {
             nanos: 5049,
         });
         verify(&decoded, r#"{"duration":"40502002.000005049s"}"#);
+
+        decoded.duration = None;
+        verify_decode(&decoded, "{}");
+
+        decoded.mixed_case = MixedCase::MixedCasea as _;
+        verify(&decoded, r#"{"mixedCase":"MixedCASEA"}"#);
+
+        decoded.mixed_case = MixedCase::MixEdCaseB as _;
+        verify(&decoded, r#"{"mixedCase":"MixEdCaseB"}"#);
+
+        decoded.mixed_case = MixedCase::C as _;
+        verify(&decoded, r#"{"mixedCase":"c"}"#);
     }
 }
