@@ -29,6 +29,7 @@ fn main() -> Result<()> {
     pbjson_build::Builder::new()
         .register_descriptors(&descriptor_set)?
         .exclude([
+            ".google.protobuf.Any",
             ".google.protobuf.Duration",
             ".google.protobuf.Timestamp",
             ".google.protobuf.Value",

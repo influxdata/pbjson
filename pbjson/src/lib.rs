@@ -64,7 +64,7 @@ pub mod private {
         where
             D: serde::Deserializer<'de>,
         {
-            let s: &str = Deserialize::deserialize(deserializer)?;
+            let s: String = Deserialize::deserialize(deserializer)?;
             let decoded = base64::decode(s).map_err(serde::de::Error::custom)?;
             Ok(Self(decoded.into()))
         }

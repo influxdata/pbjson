@@ -1,15 +1,31 @@
 use crate::Struct;
 
-impl From<std::collections::HashMap<String, crate::Value>> for Struct {
+type ValueMap = std::collections::HashMap<String, crate::Value>;
+type ValueEntry = (String, crate::Value);
+
+impl std::ops::Deref for crate::Struct {
+    type Target = ValueMap;
+    fn deref(&self) -> &Self::Target {
+        &self.fields
+    }
+}
+
+impl std::ops::DerefMut for crate::Struct {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.fields
+    }
+}
+
+impl From<ValueMap> for crate::Struct {
     fn from(fields: std::collections::HashMap<String, crate::Value>) -> Self {
         Self { fields }
     }
 }
 
-impl FromIterator<(String, crate::Value)> for Struct {
+impl FromIterator<ValueEntry> for crate::Struct {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = (String, crate::Value)>,
+        T: IntoIterator<Item = ValueEntry>,
     {
         Self {
             fields: iter.into_iter().collect(),
@@ -55,6 +71,35 @@ impl<'de> serde::de::Visitor<'de> for StructVisitor {
         }
 
         Ok(map.into())
+    }
+}
+
+impl IntoIterator for crate::Struct {
+    type Item = <ValueMap as IntoIterator>::Item;
+    type IntoIter = <ValueMap as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.fields.into_iter()
+    }
+}
+
+impl<'r> IntoIterator for &'r crate::Struct {
+    type Item = <&'r ValueMap as IntoIterator>::Item;
+    type IntoIter = <&'r ValueMap as IntoIterator>::IntoIter;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.fields.iter()
+    }
+}
+
+impl<'r> IntoIterator for &'r mut crate::Struct {
+    type Item = <&'r mut ValueMap as IntoIterator>::Item;
+    type IntoIter = <&'r mut ValueMap as IntoIterator>::IntoIter;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.fields.iter_mut()
     }
 }
 

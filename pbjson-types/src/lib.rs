@@ -36,6 +36,7 @@ mod pb {
     }
 }
 
+mod any;
 mod duration;
 mod list_value;
 mod null_value;
