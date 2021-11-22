@@ -1,6 +1,5 @@
 use crate::Duration;
 use serde::{Deserialize, Serialize};
-use std::convert::{TryFrom, TryInto};
 
 impl TryFrom<Duration> for std::time::Duration {
     type Error = std::num::TryFromIntError;

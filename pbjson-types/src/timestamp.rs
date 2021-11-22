@@ -1,7 +1,6 @@
 use crate::Timestamp;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::convert::{TryFrom, TryInto};
 
 impl TryFrom<Timestamp> for chrono::DateTime<Utc> {
     type Error = std::num::TryFromIntError;
