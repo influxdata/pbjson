@@ -3,15 +3,21 @@ use crate::descriptor::{Package, TypePath};
 #[derive(Debug)]
 pub struct Resolver<'a> {
     extern_types: &'a [(String, String)],
+    retain_enum_prefix: bool,
     package: &'a Package,
 }
 
 impl<'a> Resolver<'a> {
     /// Creates a new resolver for `package`
-    pub fn new(extern_types: &'a [(String, String)], package: &'a Package) -> Self {
+    pub fn new(
+        extern_types: &'a [(String, String)],
+        package: &'a Package,
+        retain_enum_prefix: bool,
+    ) -> Self {
         Resolver {
             extern_types,
             package,
+            retain_enum_prefix,
         }
     }
 
@@ -82,23 +88,20 @@ impl<'a> Resolver<'a> {
 
     pub fn rust_variant(&self, enumeration: &TypePath, variant: &str) -> String {
         use heck::CamelCase;
-        assert!(
-            variant
-                .chars()
-                .all(|c| matches!(c, '0'..='9' | 'A'..='Z' | '_')),
-            "illegal variant - {}",
-            variant
-        );
+        let variant = variant.to_camel_case();
+        match self.retain_enum_prefix {
+            true => variant,
+            false => {
+                let prefix = enumeration.path().last().unwrap().to_camel_case();
+                let stripped = variant.strip_prefix(&prefix).unwrap_or(&variant);
 
-        // TODO: Config to disable stripping prefix
-
-        let enumeration_name = enumeration.path().last().unwrap().to_shouty_snake_case();
-        let variant = match variant.strip_prefix(&enumeration_name) {
-            Some("") => variant,
-            Some(stripped) => stripped,
-            None => variant,
-        };
-        variant.to_camel_case()
+                // "Foo" should not be stripped from "Foobar".
+                match stripped.chars().next().map(char::is_uppercase) {
+                    Some(true) => stripped.to_string(),
+                    _ => variant,
+                }
+            }
+        }
     }
 }
 
@@ -118,7 +121,7 @@ mod tests {
                 "foo::bar::Buz".to_string(),
             ),
         ];
-        let resolver = Resolver::new(extern_types, &resolver_package);
+        let resolver = Resolver::new(extern_types, &resolver_package, false);
 
         // A type in the same package
         let same_type = TypePath::new(resolver_package.clone()).child(TypeName::new("Foo"));
@@ -171,5 +174,30 @@ mod tests {
             resolver.rust_type(&external_nested_type),
             "foo::common::Bar"
         );
+    }
+
+    #[test]
+    fn test_variant() {
+        let package = Package::new("test.syntax3");
+        let resolver = Resolver::new(&[], &package, false);
+
+        let tests = [
+            ("MyEnum", "MyEnumFoo", "Foo"),
+            ("MyEnum", "MyEnumfoo", "MyEnumfoo"),
+            ("MyEnum", "MY_ENUM_foo", "Foo"),
+        ];
+
+        for (enumeration, variant, expected) in tests {
+            assert_eq!(
+                resolver.rust_variant(
+                    &TypePath::new(Package::new("test.syntax3")).child(TypeName::new(enumeration)),
+                    variant,
+                ),
+                expected,
+                "{}::{}",
+                enumeration,
+                variant,
+            );
+        }
     }
 }

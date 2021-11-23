@@ -75,11 +75,6 @@ impl TypeName {
         use heck::CamelCase;
         self.0.to_camel_case()
     }
-
-    pub fn to_shouty_snake_case(&self) -> String {
-        use heck::ShoutySnakeCase;
-        self.0.to_shouty_snake_case()
-    }
 }
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -164,10 +159,6 @@ pub struct DescriptorSet {
 }
 
 impl DescriptorSet {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn register_encoded(&mut self, encoded: &[u8]) -> Result<()> {
         let descriptors: FileDescriptorSet =
             prost::Message::decode(encoded).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
