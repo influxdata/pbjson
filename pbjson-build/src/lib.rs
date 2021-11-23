@@ -82,7 +82,7 @@
 use std::io::{BufWriter, Error, ErrorKind, Result, Write};
 use std::path::PathBuf;
 
-use crate::descriptor::{Descriptor, DescriptorSet, Package};
+use crate::descriptor::{Descriptor, Package};
 use crate::message::resolve_message;
 use crate::{
     generator::{generate_enum, generate_message},
@@ -101,17 +101,13 @@ pub struct Builder {
     exclude: Vec<String>,
     out_dir: Option<PathBuf>,
     extern_paths: Vec<(String, String)>,
+    retain_enum_prefix: bool,
 }
 
 impl Builder {
     /// Create a new `Builder`
     pub fn new() -> Self {
-        Self {
-            descriptors: DescriptorSet::new(),
-            exclude: Default::default(),
-            out_dir: None,
-            extern_paths: Default::default(),
-        }
+        Self::default()
     }
 
     /// Configures the output directory where generated Rust files will be written.
@@ -138,6 +134,12 @@ impl Builder {
         prefixes: I,
     ) -> &mut Self {
         self.exclude.extend(prefixes.into_iter().map(Into::into));
+        self
+    }
+
+    /// Configures the code generator to not strip the enum name from variant names.
+    pub fn retain_enum_prefix(&mut self) -> &mut Self {
+        self.retain_enum_prefix = true;
         self
     }
 
@@ -212,7 +214,11 @@ impl Builder {
                 }
             };
 
-            let resolver = Resolver::new(&self.extern_paths, type_path.package());
+            let resolver = Resolver::new(
+                &self.extern_paths,
+                type_path.package(),
+                self.retain_enum_prefix,
+            );
 
             match descriptor {
                 Descriptor::Enum(descriptor) => {
