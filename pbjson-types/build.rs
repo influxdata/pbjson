@@ -32,6 +32,9 @@ fn main() -> Result<()> {
             ".google.protobuf.Duration",
             ".google.protobuf.Timestamp",
             ".google.protobuf.Value",
+            ".google.protobuf.Struct",
+            ".google.protobuf.ListValue",
+            ".google.protobuf.NullValue",
         ])
         .build(&[".google"])?;
 

@@ -38,8 +38,9 @@ mod pb {
 
 mod duration;
 mod list_value;
+mod null_value;
 mod r#struct;
 mod timestamp;
-mod value;
+pub mod value;
 
 pub use pb::google::protobuf::*;

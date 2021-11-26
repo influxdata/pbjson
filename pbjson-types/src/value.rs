@@ -9,6 +9,7 @@ macro_rules! from {
     ($($typ: ty [$id:ident] => {$($from_type:ty => $exp:expr),+ $(,)?})+) => {
         $($(
             impl From<$from_type> for $typ {
+                #[allow(unused_variables)]
                 fn from($id: $from_type) -> Self {
                     $exp
                 }
@@ -19,23 +20,35 @@ macro_rules! from {
 
 from! {
     crate::Value[value] => {
-        bool => Kind::from(value).into(),
-        f64 => Kind::from(value).into(),
-        String => Kind::from(value).into(),
         &'static str => Kind::from(value).into(),
-        Vec<Self> => Kind::from(value).into(),
-        std::collections::HashMap<String, Self> => Kind::from(value).into(),
+        () => Kind::NullValue(0).into(),
         Kind => Self { kind: Some(value) },
         Option<Kind> => Self { kind: value },
+        String => Kind::from(value).into(),
+        Vec<Self> => Kind::from(value).into(),
+        bool => Kind::from(value).into(),
+        crate::ListValue => Kind::from(value).into(),
+        crate::Struct => Kind::from(value).into(),
+        f64 => Kind::from(value).into(),
+        std::collections::HashMap<String, Self> => Kind::from(value).into(),
     }
 
     Kind[value] => {
-        bool => Self::BoolValue(value),
-        f64 => Self::NumberValue(value),
-        String => Self::StringValue(value),
         &'static str => Self::StringValue(value.into()),
+        () => Self::NullValue(0),
+        String => Self::StringValue(value),
         Vec<crate::Value> => Self::ListValue(value.into()),
+        bool => Self::BoolValue(value),
+        crate::ListValue => Self::ListValue(value),
+        crate::Struct => Self::StructValue(value),
+        f64 => Self::NumberValue(value),
         std::collections::HashMap<String, crate::Value> => Self::StructValue(value.into()),
+    }
+}
+
+impl<const N: usize> From<[Self; N]> for crate::Value {
+    fn from(value: [Self; N]) -> Self {
+        crate::ListValue::from(value).into()
     }
 }
 
@@ -68,8 +81,8 @@ impl Serialize for Kind {
             Self::NullValue(_) => ().serialize(ser),
             Self::StringValue(value) => value.serialize(ser),
             Self::BoolValue(value) => value.serialize(ser),
-            Self::StructValue(value) => value.fields.serialize(ser),
-            Self::ListValue(list) => list.values.serialize(ser),
+            Self::StructValue(value) => value.serialize(ser),
+            Self::ListValue(list) => list.serialize(ser),
             Self::NumberValue(value) => {
                 // Kind does not allow NaN's or Infinity as they are
                 // indistinguishable from strings.
@@ -226,38 +239,6 @@ impl<'de> serde::de::Visitor<'de> for KindVisitor {
         Ok(Kind::StringValue(v))
     }
 
-    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
-    where
-        E: de::Error,
-    {
-        Ok(Kind::ListValue(
-            v.iter()
-                .copied()
-                .map(f64::from)
-                .map(Kind::NumberValue)
-                .collect(),
-        ))
-    }
-
-    fn visit_borrowed_bytes<E>(self, v: &'de [u8]) -> Result<Self::Value, E>
-    where
-        E: de::Error,
-    {
-        self.visit_bytes(v)
-    }
-
-    fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
-    where
-        E: de::Error,
-    {
-        Ok(Kind::ListValue(
-            v.into_iter()
-                .map(f64::from)
-                .map(Kind::NumberValue)
-                .collect(),
-        ))
-    }
-
     fn visit_none<E>(self) -> Result<Self::Value, E>
     where
         E: de::Error,
@@ -308,10 +289,40 @@ impl<'de> serde::de::Visitor<'de> for KindVisitor {
 
 #[cfg(test)]
 mod tests {
+    use crate::Value;
+
+    #[test]
+    fn boolean() {
+        assert_eq!(
+            serde_json::to_value(Value::from(false)).unwrap(),
+            serde_json::json!(false)
+        );
+        assert_eq!(
+            serde_json::to_value(Value::from(true)).unwrap(),
+            serde_json::json!(true)
+        );
+    }
+
+    #[test]
+    fn number() {
+        assert_eq!(
+            serde_json::to_value(Value::from(5.0)).unwrap(),
+            serde_json::json!(5.0)
+        );
+    }
+
+    #[test]
+    fn string() {
+        assert_eq!(
+            serde_json::to_value(Value::from("string")).unwrap(),
+            serde_json::json!("string")
+        );
+    }
+
     #[test]
     fn float_special_cases() {
-        assert!(serde_json::to_value(crate::Value::from(f64::NAN)).is_err());
-        assert!(serde_json::to_value(crate::Value::from(f64::INFINITY)).is_err());
-        assert!(serde_json::to_value(crate::Value::from(f64::NEG_INFINITY)).is_err());
+        assert!(serde_json::to_value(Value::from(f64::NAN)).is_err());
+        assert!(serde_json::to_value(Value::from(f64::INFINITY)).is_err());
+        assert!(serde_json::to_value(Value::from(f64::NEG_INFINITY)).is_err());
     }
 }
