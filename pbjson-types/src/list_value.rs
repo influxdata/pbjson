@@ -82,6 +82,14 @@ mod tests {
     use crate::Value;
 
     #[test]
+    fn mixed_types() {
+        assert_eq!(
+            serde_json::to_value(Value::from([true.into(), "HELLO".into(), false.into()])).unwrap(),
+            serde_json::json!([true, "HELLO", false])
+        );
+    }
+
+    #[test]
     fn list_value() {
         assert_eq!(
             serde_json::to_value(Value::from([false.into(), true.into(), false.into()])).unwrap(),
