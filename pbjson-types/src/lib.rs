@@ -24,6 +24,7 @@
     clippy::redundant_closure,
     clippy::redundant_field_names,
     clippy::clone_on_ref_ptr,
+    clippy::enum_variant_names,
     clippy::use_self
 )]
 mod pb {
@@ -36,6 +37,10 @@ mod pb {
 }
 
 mod duration;
+mod list_value;
+mod null_value;
+mod r#struct;
 mod timestamp;
+pub mod value;
 
 pub use pb::google::protobuf::*;

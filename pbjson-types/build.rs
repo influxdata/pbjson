@@ -28,7 +28,14 @@ fn main() -> Result<()> {
     let descriptor_set = std::fs::read(descriptor_path)?;
     pbjson_build::Builder::new()
         .register_descriptors(&descriptor_set)?
-        .exclude([".google.protobuf.Duration", ".google.protobuf.Timestamp"])
+        .exclude([
+            ".google.protobuf.Duration",
+            ".google.protobuf.Timestamp",
+            ".google.protobuf.Value",
+            ".google.protobuf.Struct",
+            ".google.protobuf.ListValue",
+            ".google.protobuf.NullValue",
+        ])
         .build(&[".google"])?;
 
     Ok(())
