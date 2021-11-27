@@ -2,7 +2,6 @@ const TYPE_FIELD: &str = "@type";
 const VALUE_FIELD: &str = "value";
 
 impl serde::Serialize for crate::Any {
-    #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -71,7 +70,7 @@ impl<'de> serde::de::Visitor<'de> for AnyVisitor {
         let mut type_url = None;
         let mut value: Option<BytesOrValue> = None;
         let mut map = std::collections::HashMap::new();
-        while let Some(k) = dbg!(map_access.next_key())? {
+        while let Some(k) = map_access.next_key()? {
             match k {
                 AnyField::TypeUrl => {
                     if type_url.is_some() {
@@ -85,7 +84,7 @@ impl<'de> serde::de::Visitor<'de> for AnyVisitor {
                     }
 
                     value = if let Ok(bytes) =
-                        dbg!(map_access.next_value::<::pbjson::private::BytesDeserialize<_>>())
+                        map_access.next_value::<::pbjson::private::BytesDeserialize<_>>()
                     {
                         Some(BytesOrValue::Bytes(bytes.0))
                     } else {
@@ -230,7 +229,7 @@ mod tests {
             value: protobuf_encoding.clone().into(),
         };
 
-        let json = dbg!(serde_json::to_value(&any).unwrap());
+        let json = serde_json::to_value(&any).unwrap();
         let expected = serde_json::json!({
             "@type": "google.protobuf.Value",
             "value": base64::encode(&protobuf_encoding),
