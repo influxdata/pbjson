@@ -65,7 +65,22 @@ pub mod private {
             D: serde::Deserializer<'de>,
         {
             let s: &str = Deserialize::deserialize(deserializer)?;
-            let decoded = base64::decode(s).map_err(serde::de::Error::custom)?;
+
+            let decoded = base64::decode_config(s, base64::STANDARD)
+                .or_else(|e| match e {
+                    // Either standard or URL-safe base64 encoding are accepted
+                    //
+                    // The difference being URL-safe uses `-` and `_` instead of `+` and `/`
+                    //
+                    // Therefore if we error out on those characters, try again with
+                    // the URL-safe character set
+                    base64::DecodeError::InvalidByte(_, c) if c == b'-' || c == b'_' => {
+                        base64::decode_config(s, base64::URL_SAFE)
+                    }
+                    _ => Err(e),
+                })
+                .map_err(serde::de::Error::custom)?;
+
             Ok(Self(decoded.into()))
         }
     }
@@ -74,19 +89,32 @@ pub mod private {
     mod tests {
         use super::*;
         use bytes::Bytes;
+        use rand::prelude::*;
         use serde::de::value::{BorrowedStrDeserializer, Error};
 
         #[test]
         fn test_bytes() {
-            let raw = vec![2, 5, 62, 2, 5, 7, 8, 43, 5, 8, 4, 23, 5, 7, 7, 3, 2, 5, 196];
-            let encoded = base64::encode(&raw);
+            for _ in 0..20 {
+                let mut rng = thread_rng();
+                let len = rng.gen_range(50..100);
+                let raw: Vec<_> = std::iter::from_fn(|| Some(rng.gen())).take(len).collect();
 
-            let deserializer = BorrowedStrDeserializer::<'_, Error>::new(&encoded);
-            let a: Bytes = BytesDeserialize::deserialize(deserializer).unwrap().0;
-            let b: Vec<u8> = BytesDeserialize::deserialize(deserializer).unwrap().0;
+                for config in [
+                    base64::STANDARD,
+                    base64::STANDARD_NO_PAD,
+                    base64::URL_SAFE,
+                    base64::URL_SAFE_NO_PAD,
+                ] {
+                    let encoded = base64::encode_config(&raw, config);
 
-            assert_eq!(raw.as_slice(), &a);
-            assert_eq!(raw.as_slice(), &b);
+                    let deserializer = BorrowedStrDeserializer::<'_, Error>::new(&encoded);
+                    let a: Bytes = BytesDeserialize::deserialize(deserializer).unwrap().0;
+                    let b: Vec<u8> = BytesDeserialize::deserialize(deserializer).unwrap().0;
+
+                    assert_eq!(raw.as_slice(), &a);
+                    assert_eq!(raw.as_slice(), &b);
+                }
+            }
         }
     }
 }
