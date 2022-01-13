@@ -258,14 +258,22 @@ mod tests {
         decoded.repeated_bytes = Default::default();
         verify_decode(&decoded, "{}");
 
-        // decoded.bytes_dict.insert(
-        //     "test".to_string(),
-        //     prost::bytes::Bytes::from_static(b"asdf"),
-        // );
-        // verify(&decoded, r#"{"bytesDict":{"test":"YXNkZgo="}}"#);
-        //
-        // decoded.bytes_dict = Default::default();
-        // verify_decode(&decoded, "{}");
+        decoded.string_bytes_dict.insert(
+            "test".to_string(),
+            prost::bytes::Bytes::from_static(b"asdf"),
+        );
+        verify(&decoded, r#"{"stringBytesDict":{"test":"YXNkZg=="}}"#);
+
+        decoded.string_bytes_dict = Default::default();
+        verify_decode(&decoded, "{}");
+
+        decoded
+            .int_bytes_dict
+            .insert(43, prost::bytes::Bytes::from_static(b"343dfgd"));
+        verify(&decoded, r#"{"intBytesDict":{"43":"MzQzZGZnZA=="}}"#);
+
+        decoded.int_bytes_dict = Default::default();
+        verify_decode(&decoded, "{}");
 
         decoded.string = "test".to_string();
         verify(&decoded, r#"{"string":"test"}"#);

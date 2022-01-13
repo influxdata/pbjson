@@ -76,9 +76,6 @@ message KitchenSink {
   optional bytes optional_bytes = 32;
   repeated bytes repeated_bytes = 33;
 
-  // Bytes support is currently broken - https://github.com/tokio-rs/prost/issues/531
-  //  map<string, bytes> bytes_dict = 34;
-
   string string = 35;
   optional string optional_string = 36;
 
@@ -94,4 +91,10 @@ message KitchenSink {
   test.common.CommonEnumeration common_enum = 42;
 
   MixedCase mixed_case = 43;
+
+  map<string, bytes> string_bytes_dict = 44;
+  map<int32, bytes> int_bytes_dict = 45;
+
+  // https://github.com/influxdata/pbjson/issues/27
+  // map<bool, bytes> bool_bytes_dict = 46;
 }
