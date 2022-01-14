@@ -237,6 +237,7 @@ fn write_serialize_variable<W: Write>(
                 value_type.as_ref(),
                 FieldType::Scalar(ScalarType::I64)
                     | FieldType::Scalar(ScalarType::U64)
+                    | FieldType::Scalar(ScalarType::Bytes)
                     | FieldType::Enum(_)
             ) =>
         {
@@ -252,6 +253,13 @@ fn write_serialize_variable<W: Write>(
                     writeln!(
                         writer,
                         "{}.map(|(k, v)| (k, v.to_string())).collect();",
+                        Indent(indent + 1)
+                    )?;
+                }
+                FieldType::Scalar(ScalarType::Bytes) => {
+                    writeln!(
+                        writer,
+                        "{}.map(|(k, v)| (k, pbjson::private::base64::encode(v))).collect();",
                         Indent(indent + 1)
                     )?;
                 }
@@ -702,9 +710,8 @@ fn write_deserialize_field<W: Write>(
             )?;
 
             let map_k = match key {
-                ScalarType::Bytes => {
-                    // https://github.com/tokio-rs/prost/issues/531
-                    panic!("bytes are not currently supported as map keys")
+                ScalarType::Bytes | ScalarType::F32 | ScalarType::F64 => {
+                    panic!("protobuf disallows maps with floating point or bytes keys")
                 }
                 _ if key.is_numeric() => {
                     write!(
@@ -730,8 +737,8 @@ fn write_deserialize_field<W: Write>(
                     "v.0"
                 }
                 FieldType::Scalar(ScalarType::Bytes) => {
-                    // https://github.com/tokio-rs/prost/issues/531
-                    panic!("bytes are not currently supported as map values")
+                    write!(writer, "::pbjson::private::BytesDeserialize<_>",)?;
+                    "v.0"
                 }
                 FieldType::Enum(path) => {
                     write!(writer, "{}", resolver.rust_type(path))?;
