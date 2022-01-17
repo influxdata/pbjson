@@ -10,7 +10,7 @@ use prost_types::{
 };
 
 use crate::descriptor::{Descriptor, DescriptorSet, MessageDescriptor, Syntax, TypeName, TypePath};
-use crate::escape::escape_ident;
+use crate::escape::{escape_camel_case, escape_ident};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ScalarType {
@@ -86,7 +86,7 @@ pub struct Field {
 impl Field {
     pub fn rust_type_name(&self) -> String {
         use heck::CamelCase;
-        self.name.to_camel_case()
+        escape_camel_case(self.name.to_camel_case())
     }
 
     pub fn rust_field_name(&self) -> String {

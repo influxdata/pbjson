@@ -24,3 +24,12 @@ pub fn escape_ident(mut ident: String) -> String {
     };
     ident
 }
+
+/// Converts a `snake_case` identifier to an `UpperCamel` case Rust type identifier.
+pub fn escape_camel_case(mut ident: String) -> String {
+    // Suffix an underscore for the `Self` Rust keyword as it is not allowed as raw identifier.
+    if ident == "Self" {
+        ident += "_";
+    }
+    ident
+}
