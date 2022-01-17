@@ -116,9 +116,13 @@ mod tests {
         let resolver_package = Package::new("envoy.service.health.v3");
         let resolver = Resolver::new(&[], &resolver_package, false);
 
-        let to_resolve = TypePath::new(Package::new("envoy.config.core.v3")).child(TypeName::new("HealthStatus"));
+        let to_resolve = TypePath::new(Package::new("envoy.config.core.v3"))
+            .child(TypeName::new("HealthStatus"));
 
-        assert_eq!("super::super::super::config::core::v3::HealthStatus", resolver.rust_type(&to_resolve));
+        assert_eq!(
+            "super::super::super::config::core::v3::HealthStatus",
+            resolver.rust_type(&to_resolve)
+        );
     }
 
     #[test]

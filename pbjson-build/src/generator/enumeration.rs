@@ -4,6 +4,9 @@
 //! An enumeration should be decode-able from the full string variant name
 //! or its integer tag number, and should encode to the string representation
 
+use std::collections::HashSet;
+use std::io::{Result, Write};
+
 use super::{
     write_deserialize_end, write_deserialize_start, write_serialize_end, write_serialize_start,
     Indent,
@@ -11,7 +14,6 @@ use super::{
 use crate::descriptor::{EnumDescriptor, TypePath};
 use crate::generator::write_fields_array;
 use crate::resolver::Resolver;
-use std::io::{Result, Write};
 
 pub fn generate_enum<W: Write>(
     resolver: &Resolver<'_>,
@@ -21,9 +23,16 @@ pub fn generate_enum<W: Write>(
 ) -> Result<()> {
     let rust_type = resolver.rust_type(path);
 
+    let mut numbers = HashSet::new();
+
     let variants: Vec<_> = descriptor
         .values
         .iter()
+        .filter(|variant| {
+            // Skip duplicate enum values. Protobuf allows this when the
+            // 'allow_alias' option is set.
+            numbers.insert(variant.number())
+        })
         .map(|variant| {
             let variant_name = variant.name.clone().unwrap();
             let rust_variant = resolver.rust_variant(path, &variant_name);
