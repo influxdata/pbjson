@@ -1,4 +1,5 @@
 use crate::descriptor::{Package, TypePath};
+use crate::escape::{escape_camel_case, escape_ident};
 
 #[derive(Debug)]
 pub struct Resolver<'a> {
@@ -57,7 +58,7 @@ impl<'a> Resolver<'a> {
                     .path()
                     .iter()
                     .zip(path.path())
-                    .filter(|(a, b)| a == b)
+                    .take_while(|(a, b)| a == b)
                     .count();
 
                 let super_count = self.package.path().len() - shared_prefix;
@@ -75,11 +76,11 @@ impl<'a> Resolver<'a> {
         while let Some(i) = iter.next() {
             match iter.peek() {
                 Some(_) => {
-                    ret.push_str(i.to_snake_case().as_str());
+                    ret.push_str(escape_ident(i.to_snake_case()).as_str());
                     ret.push_str("::");
                 }
                 None => {
-                    ret.push_str(i.to_upper_camel_case().as_str());
+                    ret.push_str(escape_camel_case(i.to_upper_camel_case()).as_str());
                 }
             }
         }
@@ -109,6 +110,20 @@ impl<'a> Resolver<'a> {
 mod tests {
     use super::*;
     use crate::descriptor::TypeName;
+
+    #[test]
+    fn test_complicated_resolver() {
+        let resolver_package = Package::new("envoy.service.health.v3");
+        let resolver = Resolver::new(&[], &resolver_package, false);
+
+        let to_resolve = TypePath::new(Package::new("envoy.config.core.v3"))
+            .child(TypeName::new("HealthStatus"));
+
+        assert_eq!(
+            "super::super::super::config::core::v3::HealthStatus",
+            resolver.rust_type(&to_resolve)
+        );
+    }
 
     #[test]
     fn test_resolver() {

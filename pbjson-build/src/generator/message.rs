@@ -30,6 +30,7 @@ use super::{
     Indent,
 };
 use crate::descriptor::TypePath;
+use crate::escape::escape_camel_case;
 use crate::generator::write_fields_array;
 use crate::resolver::Resolver;
 
@@ -440,7 +441,7 @@ fn write_deserialize_message<W: Write>(
 {indent}        formatter.write_str("struct {name}")
 {indent}    }}
 
-{indent}    fn visit_map<V>(self, mut map: V) -> Result<{rust_type}, V::Error>
+{indent}    fn visit_map<V>(self, mut pbjson_map: V) -> Result<{rust_type}, V::Error>
 {indent}        where
 {indent}            V: serde::de::MapAccess<'de>,
 {indent}    {{"#,
@@ -470,7 +471,7 @@ fn write_deserialize_message<W: Write>(
     if !message.fields.is_empty() || !message.one_ofs.is_empty() {
         writeln!(
             writer,
-            "{}while let Some(k) = map.next_key()? {{",
+            "{}while let Some(k) = pbjson_map.next_key()? {{",
             Indent(indent + 2)
         )?;
 
@@ -491,7 +492,7 @@ fn write_deserialize_message<W: Write>(
     } else {
         writeln!(
             writer,
-            "{}while map.next_key::<GeneratedField>()?.is_some() {{}}",
+            "{}while pbjson_map.next_key::<GeneratedField>()?.is_some() {{}}",
             Indent(indent + 2)
         )?;
     }
@@ -591,7 +592,7 @@ fn write_deserialize_field_name<W: Write>(
                 "{}\"{}\" => Ok(GeneratedField::{}),",
                 Indent(indent + 5),
                 json_name,
-                type_name
+                escape_camel_case(type_name.to_string()),
             )?;
         }
         writeln!(
@@ -631,7 +632,12 @@ fn write_fields_enum<'a, W: Write, I: Iterator<Item = &'a str>>(
     )?;
     writeln!(writer, "{}enum GeneratedField {{", Indent(indent))?;
     for type_name in fields {
-        writeln!(writer, "{}{},", Indent(indent + 1), type_name)?;
+        writeln!(
+            writer,
+            "{}{},",
+            Indent(indent + 1),
+            escape_camel_case(type_name.to_string())
+        )?;
     }
     writeln!(writer, "{}}}", Indent(indent))
 }
@@ -689,14 +695,14 @@ fn write_deserialize_field<W: Write>(
             FieldModifier::Repeated => {
                 write!(
                     writer,
-                    "map.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect()",
+                    "pbjson_map.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect()",
                     resolver.rust_type(path)
                 )?;
             }
             _ => {
                 write!(
                     writer,
-                    "map.next_value::<{}>()? as i32",
+                    "pbjson_map.next_value::<{}>()? as i32",
                     resolver.rust_type(path)
                 )?;
             }
@@ -705,7 +711,7 @@ fn write_deserialize_field<W: Write>(
             writeln!(writer)?;
             write!(
                 writer,
-                "{}map.next_value::<std::collections::HashMap<",
+                "{}pbjson_map.next_value::<std::collections::HashMap<",
                 Indent(indent + 2),
             )?;
 
@@ -764,7 +770,7 @@ fn write_deserialize_field<W: Write>(
             write!(writer, "{}", Indent(indent + 1))?;
         }
         _ => {
-            write!(writer, "map.next_value()?",)?;
+            write!(writer, "pbjson_map.next_value()?",)?;
         }
     };
 
@@ -785,7 +791,7 @@ fn write_encode_scalar_field<W: Write>(
     let deserializer = match scalar {
         ScalarType::Bytes => "BytesDeserialize",
         _ if scalar.is_numeric() => "NumberDeserialize",
-        _ => return write!(writer, "map.next_value()?",),
+        _ => return write!(writer, "pbjson_map.next_value()?",),
     };
 
     writeln!(writer)?;
@@ -794,7 +800,7 @@ fn write_encode_scalar_field<W: Write>(
         FieldModifier::Repeated => {
             writeln!(
                 writer,
-                "{}map.next_value::<Vec<::pbjson::private::{}<_>>>()?",
+                "{}pbjson_map.next_value::<Vec<::pbjson::private::{}<_>>>()?",
                 Indent(indent + 1),
                 deserializer
             )?;
@@ -807,7 +813,7 @@ fn write_encode_scalar_field<W: Write>(
         _ => {
             writeln!(
                 writer,
-                "{}map.next_value::<::pbjson::private::{}<_>>()?.0",
+                "{}pbjson_map.next_value::<::pbjson::private::{}<_>>()?.0",
                 Indent(indent + 1),
                 deserializer
             )?;
