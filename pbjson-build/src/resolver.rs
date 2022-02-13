@@ -80,7 +80,7 @@ impl<'a> Resolver<'a> {
                     ret.push_str("::");
                 }
                 None => {
-                    ret.push_str(escape_camel_case(i.to_camel_case()).as_str());
+                    ret.push_str(escape_camel_case(i.to_upper_camel_case()).as_str());
                 }
             }
         }
@@ -88,12 +88,12 @@ impl<'a> Resolver<'a> {
     }
 
     pub fn rust_variant(&self, enumeration: &TypePath, variant: &str) -> String {
-        use heck::CamelCase;
-        let variant = variant.to_camel_case();
+        use heck::ToUpperCamelCase;
+        let variant = variant.to_upper_camel_case();
         match self.retain_enum_prefix {
             true => variant,
             false => {
-                let prefix = enumeration.path().last().unwrap().to_camel_case();
+                let prefix = enumeration.path().last().unwrap().to_upper_camel_case();
                 let stripped = variant.strip_prefix(&prefix).unwrap_or(&variant);
 
                 // "Foo" should not be stripped from "Foobar".
