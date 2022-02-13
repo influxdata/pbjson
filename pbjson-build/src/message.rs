@@ -85,20 +85,20 @@ pub struct Field {
 
 impl Field {
     pub fn rust_type_name(&self) -> String {
-        use heck::CamelCase;
-        self.name.to_camel_case()
+        use heck::ToUpperCamelCase;
+        self.name.to_upper_camel_case()
     }
 
     pub fn rust_field_name(&self) -> String {
-        use heck::SnakeCase;
+        use heck::ToSnakeCase;
         escape_ident(self.name.to_snake_case())
     }
 
     pub fn json_name(&self) -> String {
-        use heck::MixedCase;
+        use heck::ToLowerCamelCase;
         self.json_name
             .clone()
-            .unwrap_or_else(|| self.name.to_mixed_case())
+            .unwrap_or_else(|| self.name.to_lower_camel_case())
     }
 }
 
@@ -111,7 +111,7 @@ pub struct OneOf {
 
 impl OneOf {
     pub fn rust_field_name(&self) -> String {
-        use heck::SnakeCase;
+        use heck::ToSnakeCase;
         escape_ident(self.name.to_snake_case())
     }
 }
