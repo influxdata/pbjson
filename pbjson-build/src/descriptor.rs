@@ -67,13 +67,13 @@ impl TypeName {
     }
 
     pub fn to_snake_case(&self) -> String {
-        use heck::SnakeCase;
+        use heck::ToSnakeCase;
         self.0.to_snake_case()
     }
 
-    pub fn to_camel_case(&self) -> String {
-        use heck::CamelCase;
-        self.0.to_camel_case()
+    pub fn to_upper_camel_case(&self) -> String {
+        use heck::ToUpperCamelCase;
+        self.0.to_upper_camel_case()
     }
 }
 
