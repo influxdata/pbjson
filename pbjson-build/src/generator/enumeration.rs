@@ -82,7 +82,7 @@ fn write_visitor<W: Write>(
 {indent}        write!(formatter, "expected one of: {{:?}}", &FIELDS)
 {indent}    }}
 
-{indent}    fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
+{indent}    fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
 {indent}    where
 {indent}        E: serde::de::Error,
 {indent}    {{
@@ -95,7 +95,7 @@ fn write_visitor<W: Write>(
 {indent}            }})
 {indent}    }}
 
-{indent}    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+{indent}    fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
 {indent}    where
 {indent}        E: serde::de::Error,
 {indent}    {{
@@ -108,7 +108,7 @@ fn write_visitor<W: Write>(
 {indent}            }})
 {indent}    }}
 
-{indent}    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+{indent}    fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
 {indent}    where
 {indent}        E: serde::de::Error,
 {indent}    {{"#,
