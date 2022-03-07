@@ -440,7 +440,7 @@ fn write_deserialize_message<W: Write>(
 {indent}        formatter.write_str("struct {name}")
 {indent}    }}
 
-{indent}    fn visit_map<V>(self, mut map: V) -> Result<{rust_type}, V::Error>
+{indent}    fn visit_map<V>(self, mut map: V) -> std::result::Result<{rust_type}, V::Error>
 {indent}        where
 {indent}            V: serde::de::MapAccess<'de>,
 {indent}    {{"#,
@@ -563,7 +563,7 @@ fn write_deserialize_field_name<W: Write>(
     writeln!(
         writer,
         r#"{indent}impl<'de> serde::Deserialize<'de> for GeneratedField {{
-{indent}    fn deserialize<D>(deserializer: D) -> Result<GeneratedField, D::Error>
+{indent}    fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
 {indent}    where
 {indent}        D: serde::Deserializer<'de>,
 {indent}    {{
@@ -576,7 +576,7 @@ fn write_deserialize_field_name<W: Write>(
 {indent}                write!(formatter, "expected one of: {{:?}}", &FIELDS)
 {indent}            }}
 
-{indent}            fn visit_str<E>(self, value: &str) -> Result<GeneratedField, E>
+{indent}            fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
 {indent}            where
 {indent}                E: serde::de::Error,
 {indent}            {{"#,
