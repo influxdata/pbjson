@@ -1,6 +1,6 @@
 [package]
 name = "pbjson-types"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
 description = "Protobuf well known types with serde serialization support"
 edition = "2021"
