@@ -9,7 +9,7 @@ use std::io::{Error, ErrorKind, Result};
 use itertools::{EitherOrBoth, Itertools};
 use prost_types::{
     DescriptorProto, EnumDescriptorProto, EnumValueDescriptorProto, FieldDescriptorProto,
-    FileDescriptorSet, MessageOptions, OneofDescriptorProto,
+    FileDescriptorProto, FileDescriptorSet, MessageOptions, OneofDescriptorProto,
 };
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -164,25 +164,29 @@ impl DescriptorSet {
             prost::Message::decode(encoded).map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
 
         for file in descriptors.file {
-            let syntax = match file.syntax.as_deref() {
-                None | Some("proto2") => Syntax::Proto2,
-                Some("proto3") => Syntax::Proto3,
-                Some(s) => panic!("unknown syntax: {}", s),
-            };
-
-            let package = Package::new(file.package.expect("expected package"));
-            let path = TypePath::new(package);
-
-            for descriptor in file.message_type {
-                self.register_message(&path, descriptor, syntax)
-            }
-
-            for descriptor in file.enum_type {
-                self.register_enum(&path, descriptor)
-            }
+            self.register_file_descriptor(file);
         }
 
         Ok(())
+    }
+
+    pub fn register_file_descriptor(&mut self, file: FileDescriptorProto) {
+        let syntax = match file.syntax.as_deref() {
+            None | Some("proto2") => Syntax::Proto2,
+            Some("proto3") => Syntax::Proto3,
+            Some(s) => panic!("unknown syntax: {}", s),
+        };
+
+        let package = Package::new(file.package.expect("expected package"));
+        let path = TypePath::new(package);
+
+        for descriptor in file.message_type {
+            self.register_message(&path, descriptor, syntax)
+        }
+
+        for descriptor in file.enum_type {
+            self.register_enum(&path, descriptor)
+        }
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (&TypePath, &Descriptor)> {
