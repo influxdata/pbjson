@@ -43,7 +43,8 @@ mod tests {
     use test::syntax3::*;
 
     #[test]
-    fn test_empty() {
+    #[cfg(not(feature = "ignore-unknown-fields"))]
+    fn test_unknown_field_error() {
         let message = Empty {};
 
         let encoded = serde_json::to_string(&message).unwrap();
@@ -60,6 +61,18 @@ mod tests {
             err.to_string().as_str(),
             "unknown field `foo`, there are no fields at line 1 column 6"
         );
+    }
+
+    #[test]
+    #[cfg(feature = "ignore-unknown-fields")]
+    fn test_ignore_unknown_field() {
+        let message = Empty {};
+
+        let encoded = serde_json::to_string(&message).unwrap();
+        let _decoded: Empty = serde_json::from_str(&encoded).unwrap();
+
+        let empty = serde_json::from_str::<Empty>("{\n \"foo\": \"bar\"\n}").unwrap();
+        assert_eq!(empty, Empty {});
     }
 
     #[test]

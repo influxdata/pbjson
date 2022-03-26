@@ -12,6 +12,9 @@ pbjson = { path = "../pbjson" }
 pbjson-types = { path = "../pbjson-types" }
 serde = { version = "1.0", features = ["derive"] }
 
+[features]
+ignore-unknown-fields = []
+
 [dev-dependencies]
 chrono = "0.4"
 serde_json = "1.0"

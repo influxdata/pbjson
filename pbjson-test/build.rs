@@ -26,11 +26,17 @@ fn main() -> Result<()> {
         .protoc_arg("--experimental_allow_proto3_optional")
         .compile_protos(&proto_files, &[root])?;
 
-    let descriptor_set = std::fs::read(descriptor_path)?;
-    pbjson_build::Builder::new()
+    let descriptor_set = std::fs::read(&descriptor_path)?;
+    let mut builder = pbjson_build::Builder::new();
+    builder
         .register_descriptors(&descriptor_set)?
-        .extern_path(".test.external", "crate")
-        .build(&[".test"])?;
+        .extern_path(".test.external", "crate");
+
+    if cfg!(feature = "ignore-unknown-fields") {
+        builder.ignore_unknown_fields();
+    }
+
+    builder.build(&[".test"])?;
 
     Ok(())
 }

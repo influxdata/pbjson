@@ -37,6 +37,7 @@ pub fn generate_message<W: Write>(
     resolver: &Resolver<'_>,
     message: &Message,
     writer: &mut W,
+    ignore_unknown_fields: bool,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(&message.path);
 
@@ -47,7 +48,14 @@ pub fn generate_message<W: Write>(
 
     // Generate Deserialize
     write_deserialize_start(0, &rust_type, writer)?;
-    write_deserialize_message(resolver, 2, message, &rust_type, writer)?;
+    write_deserialize_message(
+        resolver,
+        2,
+        message,
+        &rust_type,
+        writer,
+        ignore_unknown_fields,
+    )?;
     write_deserialize_end(0, writer)?;
     Ok(())
 }
@@ -426,8 +434,9 @@ fn write_deserialize_message<W: Write>(
     message: &Message,
     rust_type: &str,
     writer: &mut W,
+    ignore_unknown_fields: bool,
 ) -> Result<()> {
-    write_deserialize_field_name(2, message, writer)?;
+    write_deserialize_field_name(2, message, writer, ignore_unknown_fields)?;
 
     writeln!(writer, "{}struct GeneratedVisitor;", Indent(indent))?;
 
@@ -486,14 +495,34 @@ fn write_deserialize_message<W: Write>(
             }
         }
 
+        if ignore_unknown_fields {
+            writeln!(
+                writer,
+                "{}GeneratedField::__SkipField__ => {{",
+                Indent(indent + 4),
+            )?;
+            writeln!(
+                writer,
+                "{}let _ = map.next_value::<serde::de::IgnoredAny>()?;",
+                Indent(indent + 5),
+            )?;
+            writeln!(writer, "{}}}", Indent(indent + 4))?;
+        }
+
         writeln!(writer, "{}}}", Indent(indent + 3))?;
         writeln!(writer, "{}}}", Indent(indent + 2))?;
     } else {
         writeln!(
             writer,
-            "{}while map.next_key::<GeneratedField>()?.is_some() {{}}",
+            "{}while map.next_key::<GeneratedField>()?.is_some() {{",
             Indent(indent + 2)
         )?;
+        writeln!(
+            writer,
+            "{}let _ = map.next_value::<serde::de::IgnoredAny>()?;",
+            Indent(indent + 3)
+        )?;
+        writeln!(writer, "{}}}", Indent(indent + 2))?;
     }
 
     writeln!(writer, "{}Ok({} {{", Indent(indent + 2), rust_type)?;
@@ -551,6 +580,7 @@ fn write_deserialize_field_name<W: Write>(
     indent: usize,
     message: &Message,
     writer: &mut W,
+    ignore_unknown_fields: bool,
 ) -> Result<()> {
     let fields: Vec<_> = message
         .all_fields()
@@ -558,7 +588,12 @@ fn write_deserialize_field_name<W: Write>(
         .collect();
 
     write_fields_array(writer, indent, fields.iter().map(|(name, _)| name.as_str()))?;
-    write_fields_enum(writer, indent, fields.iter().map(|(_, name)| name.as_str()))?;
+    write_fields_enum(
+        writer,
+        indent,
+        fields.iter().map(|(_, name)| name.as_str()),
+        ignore_unknown_fields,
+    )?;
 
     writeln!(
         writer,
@@ -576,6 +611,7 @@ fn write_deserialize_field_name<W: Write>(
 {indent}                write!(formatter, "expected one of: {{:?}}", &FIELDS)
 {indent}            }}
 
+{indent}            #[allow(unused_variables)]
 {indent}            fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
 {indent}            where
 {indent}                E: serde::de::Error,
@@ -594,17 +630,31 @@ fn write_deserialize_field_name<W: Write>(
                 type_name
             )?;
         }
+        if ignore_unknown_fields {
+            writeln!(
+                writer,
+                "{}_ => Ok(GeneratedField::__SkipField__),",
+                Indent(indent + 5)
+            )?;
+        } else {
+            writeln!(
+                writer,
+                "{}_ => Err(serde::de::Error::unknown_field(value, FIELDS)),",
+                Indent(indent + 5)
+            )?;
+        }
+        writeln!(writer, "{}}}", Indent(indent + 4))?;
+    } else if ignore_unknown_fields {
         writeln!(
             writer,
-            "{}_ => Err(serde::de::Error::unknown_field(value, FIELDS)),",
+            "{}Ok(GeneratedField::__SkipField__)",
             Indent(indent + 5)
         )?;
-        writeln!(writer, "{}}}", Indent(indent + 4))?;
     } else {
         writeln!(
             writer,
             "{}Err(serde::de::Error::unknown_field(value, FIELDS))",
-            Indent(indent + 4)
+            Indent(indent + 5)
         )?;
     }
 
@@ -623,6 +673,7 @@ fn write_fields_enum<'a, W: Write, I: Iterator<Item = &'a str>>(
     writer: &mut W,
     indent: usize,
     fields: I,
+    ignore_unknown_fields: bool,
 ) -> Result<()> {
     writeln!(
         writer,
@@ -633,6 +684,11 @@ fn write_fields_enum<'a, W: Write, I: Iterator<Item = &'a str>>(
     for type_name in fields {
         writeln!(writer, "{}{},", Indent(indent + 1), type_name)?;
     }
+
+    if ignore_unknown_fields {
+        writeln!(writer, "{}__SkipField__,", Indent(indent + 1))?;
+    }
+
     writeln!(writer, "{}}}", Indent(indent))
 }
 

@@ -125,6 +125,9 @@ jobs:
       - run:
           name: Cargo test
           command: cargo test --workspace
+      - run:
+          name: Cargo test (ignore unknown fields)
+          command: cargo test --workspace --features ignore-unknown-fields
       - cache_save
 
 workflows:
