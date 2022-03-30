@@ -102,9 +102,11 @@ jobs:
           name: Cargo doc
           command: cargo doc --document-private-items --no-deps --workspace
       - cache_save
+      - run:
+          name: Compress Docs
+          command: tar -cvzf rustdoc.tar.gz target/doc/
       - store_artifacts:
-          path: target/doc/
-          destination: rustdoc
+          path: rustdoc.tar.gz
 
   test:
     docker:
