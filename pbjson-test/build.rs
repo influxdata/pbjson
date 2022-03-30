@@ -23,6 +23,7 @@ fn main() -> Result<()> {
         .extern_path(".google.protobuf", "::pbjson_types")
         .extern_path(".test.external", "crate")
         .bytes(&[".test"])
+        .protoc_arg("--experimental_allow_proto3_optional")
         .compile_protos(&proto_files, &[root])?;
 
     let descriptor_set = std::fs::read(descriptor_path)?;
