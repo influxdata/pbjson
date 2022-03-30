@@ -12,8 +12,8 @@ repository = "https://github.com/influxdata/pbjson"
 [dependencies]
 
 heck = "0.4"
-prost = "0.9"
-prost-types = "0.9"
+prost = "0.10"
+prost-types = "0.10"
 itertools = "0.10"
 
 [dev-dependencies]
