@@ -79,6 +79,7 @@
     clippy::future_not_send
 )]
 
+use prost_types::FileDescriptorProto;
 use std::io::{BufWriter, Error, ErrorKind, Result, Write};
 use std::path::PathBuf;
 
@@ -126,6 +127,12 @@ impl Builder {
     pub fn register_descriptors(&mut self, descriptors: &[u8]) -> Result<&mut Self> {
         self.descriptors.register_encoded(descriptors)?;
         Ok(self)
+    }
+
+    /// Register a decoded `FileDescriptor` with this `Builder`
+    pub fn register_file_descriptor(&mut self, file: FileDescriptorProto) -> &mut Self {
+        self.descriptors.register_file_descriptor(file);
+        self
     }
 
     /// Don't generate code for the following type prefixes
@@ -186,7 +193,12 @@ impl Builder {
         Ok(())
     }
 
-    fn generate<S: AsRef<str>, W: Write, F: FnMut(&Package) -> Result<W>>(
+    /// Generates code into instances of write as provided by the `write_factory`
+    ///
+    /// This function is intended for use when writing output of code generation
+    /// directly to output files is not desired. For most use cases inside a
+    /// `build.rs` file, the [`build()`][Self::build] method should be preferred.
+    pub fn generate<S: AsRef<str>, W: Write, F: FnMut(&Package) -> Result<W>>(
         &self,
         prefixes: &[S],
         mut write_factory: F,
