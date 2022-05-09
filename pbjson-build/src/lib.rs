@@ -103,6 +103,7 @@ pub struct Builder {
     out_dir: Option<PathBuf>,
     extern_paths: Vec<(String, String)>,
     retain_enum_prefix: bool,
+    ignore_unknown_fields: bool,
 }
 
 impl Builder {
@@ -158,6 +159,14 @@ impl Builder {
     ) -> &mut Self {
         self.extern_paths
             .push((proto_path.into(), rust_path.into()));
+        self
+    }
+
+    /// Don't error out in the presence of unknown fields when deserializing,
+    /// instead skip the field.
+    pub fn ignore_unknown_fields(&mut self) -> &mut Self {
+        self.ignore_unknown_fields = true;
+
         self
     }
 
@@ -238,7 +247,7 @@ impl Builder {
                 }
                 Descriptor::Message(descriptor) => {
                     if let Some(message) = resolve_message(&self.descriptors, descriptor) {
-                        generate_message(&resolver, &message, writer)?
+                        generate_message(&resolver, &message, writer, self.ignore_unknown_fields)?
                     }
                 }
             }
