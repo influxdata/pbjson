@@ -461,7 +461,7 @@ fn write_deserialize_message<W: Write>(
     for field in &message.fields {
         writeln!(
             writer,
-            "{}let mut {} = None;",
+            "{}let mut {}__ = None;",
             Indent(indent + 2),
             field.rust_field_name(),
         )?;
@@ -470,7 +470,7 @@ fn write_deserialize_message<W: Write>(
     for one_of in &message.one_ofs {
         writeln!(
             writer,
-            "{}let mut {} = None;",
+            "{}let mut {}__ = None;",
             Indent(indent + 2),
             one_of.rust_field_name(),
         )?;
@@ -531,7 +531,7 @@ fn write_deserialize_message<W: Write>(
             FieldModifier::Required => {
                 writeln!(
                     writer,
-                    "{indent}{field}: {field}.ok_or_else(|| serde::de::Error::missing_field(\"{json_name}\"))?,",
+                    "{indent}{field}: {field}__.ok_or_else(|| serde::de::Error::missing_field(\"{json_name}\"))?,",
                     indent=Indent(indent + 3),
                     field= field.rust_field_name(),
                     json_name= field.json_name()
@@ -541,7 +541,7 @@ fn write_deserialize_message<W: Write>(
                 // Note: this currently does not hydrate optional proto2 fields with defaults
                 writeln!(
                     writer,
-                    "{indent}{field}: {field}.unwrap_or_default(),",
+                    "{indent}{field}: {field}__.unwrap_or_default(),",
                     indent = Indent(indent + 3),
                     field = field.rust_field_name()
                 )?;
@@ -549,7 +549,7 @@ fn write_deserialize_message<W: Write>(
             _ => {
                 writeln!(
                     writer,
-                    "{indent}{field},",
+                    "{indent}{field}: {field}__,",
                     indent = Indent(indent + 3),
                     field = field.rust_field_name()
                 )?;
@@ -559,7 +559,7 @@ fn write_deserialize_message<W: Write>(
     for one_of in &message.one_ofs {
         writeln!(
             writer,
-            "{indent}{field},",
+            "{indent}{field}: {field}__,",
             indent = Indent(indent + 3),
             field = one_of.rust_field_name(),
         )?;
@@ -713,7 +713,7 @@ fn write_deserialize_field<W: Write>(
     )?;
     writeln!(
         writer,
-        "{}if {}.is_some() {{",
+        "{}if {}__.is_some() {{",
         Indent(indent + 1),
         field_name
     )?;
@@ -726,7 +726,7 @@ fn write_deserialize_field<W: Write>(
         json_name
     )?;
     writeln!(writer, "{}}}", Indent(indent + 1))?;
-    write!(writer, "{}{} = Some(", Indent(indent + 1), field_name)?;
+    write!(writer, "{}{}__ = Some(", Indent(indent + 1), field_name)?;
 
     if let Some(one_of) = one_of {
         write!(

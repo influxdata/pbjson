@@ -32,6 +32,10 @@ pub mod test {
         include!(concat!(env!("OUT_DIR"), "/test.common.rs"));
         include!(concat!(env!("OUT_DIR"), "/test.common.serde.rs"));
     }
+    pub mod duplicate_name {
+        include!(concat!(env!("OUT_DIR"), "/test.duplicate_name.rs"));
+        include!(concat!(env!("OUT_DIR"), "/test.duplicate_name.serde.rs"));
+    }
 }
 
 #[cfg(test)]
