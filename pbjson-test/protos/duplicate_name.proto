@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package test.duplicate_name;
+
+message Message {
+  bool serializer = 1;
+  bool len = 2;
+  bool struct_ser = 3;
+  bool v = 4;
+  bool value = 5;
+  bool deserializer = 6;
+  bool FIELDS = 7;
+  bool formatter = 8;
+  bool map = 9;
+  bool k = 10;
+  bool variant = 11;
+
+  bool test = 20;
+}
+
+message Oneof {
+  oneof oneof {
+    bool serializer = 1;
+    bool len = 2;
+    bool struct_ser = 3;
+    bool v = 4;
+    bool value = 5;
+    bool deserializer = 6;
+    bool FIELDS = 7;
+    bool formatter = 8;
+    bool map = 9;
+    bool k = 10;
+    bool variant = 11;
+
+    bool test = 20;
+  }
+}
+
+enum Enum {
+  UNSPECIFIED = 0;
+  serializer = 1;
+  len = 2;
+  struct_ser = 3;
+  v = 4;
+  value = 5;
+  deserializer = 6;
+  FIELDS = 7;
+  formatter = 8;
+  map = 9;
+  k = 10;
+  variant = 11;
+
+  test = 20;
+}
