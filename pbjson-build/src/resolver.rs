@@ -57,7 +57,7 @@ impl<'a> Resolver<'a> {
                     .path()
                     .iter()
                     .zip(path.path())
-                    .filter(|(a, b)| a == b)
+                    .take_while(|(a, b)| a == b)
                     .count();
 
                 let super_count = self.package.path().len() - shared_prefix;
@@ -173,6 +173,19 @@ mod tests {
         assert_eq!(
             resolver.rust_type(&external_nested_type),
             "foo::common::Bar"
+        );
+    }
+
+    #[test]
+    // https://github.com/influxdata/pbjson/issues/48
+    fn test_resolver_shared_prefix_false_match() {
+        assert_eq!(
+            Resolver::new(&[], &Package::new("test.api.v1"), false).rust_type(
+                &TypePath::new(Package::new("test.domain.v1"))
+                    .child(TypeName::new("Foo"))
+                    .child(TypeName::new("Bar"))
+            ),
+            "super::super::domain::v1::foo::Bar"
         );
     }
 
