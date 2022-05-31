@@ -43,12 +43,7 @@ impl ScalarType {
     pub fn is_numeric(&self) -> bool {
         matches!(
             self,
-            Self::F64
-                | Self::F32
-                | Self::I32
-                | Self::I64
-                | Self::U32
-                | Self::U64
+            Self::F64 | Self::F32 | Self::I32 | Self::I64 | Self::U32 | Self::U64
         )
     }
 }
