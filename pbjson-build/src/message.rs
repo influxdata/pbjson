@@ -28,27 +28,27 @@ pub enum ScalarType {
 impl ScalarType {
     pub fn rust_type(&self) -> &'static str {
         match self {
-            ScalarType::F64 => "f64",
-            ScalarType::F32 => "f32",
-            ScalarType::I32 => "i32",
-            ScalarType::I64 => "i64",
-            ScalarType::U32 => "u32",
-            ScalarType::U64 => "u64",
-            ScalarType::Bool => "bool",
-            ScalarType::String => "String",
-            ScalarType::Bytes => "Vec<u8>",
+            Self::F64 => "f64",
+            Self::F32 => "f32",
+            Self::I32 => "i32",
+            Self::I64 => "i64",
+            Self::U32 => "u32",
+            Self::U64 => "u64",
+            Self::Bool => "bool",
+            Self::String => "String",
+            Self::Bytes => "Vec<u8>",
         }
     }
 
     pub fn is_numeric(&self) -> bool {
         matches!(
             self,
-            ScalarType::F64
-                | ScalarType::F32
-                | ScalarType::I32
-                | ScalarType::I64
-                | ScalarType::U32
-                | ScalarType::U64
+            Self::F64
+                | Self::F32
+                | Self::I32
+                | Self::I64
+                | Self::U32
+                | Self::U64
         )
     }
 }
