@@ -19,9 +19,9 @@ pub struct Package {
 
 impl Display for Package {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.path[0])?;
+        write!(f, "{}", self.path[0].to_snake_case())?;
         for element in &self.path[1..self.path.len()] {
-            write!(f, ".{}", element)?;
+            write!(f, ".{}", element.to_snake_case())?;
         }
         Ok(())
     }
@@ -290,5 +290,13 @@ mod tests {
         assert_eq!(t.prefix_match(".foo.bar.Baza"), None);
         assert_eq!(t.prefix_match(".foo.bar.Baz.Bar"), Some(4));
         assert_eq!(t.prefix_match(".foo.bar.Baz.Bar.Boo"), None);
+    }
+
+    #[test]
+    fn test_handle_camel_case_in_package() {
+        assert_eq!(
+            Package::new("fooBar.baz.boo").to_string(),
+            String::from("foo_bar.baz.boo")
+        )
     }
 }
