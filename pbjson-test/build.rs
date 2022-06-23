@@ -21,14 +21,20 @@ fn main() -> Result<()> {
     }
 
     let descriptor_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("proto_descriptor.bin");
-    prost_build::Config::new()
+    let mut prost_config = prost_build::Config::new();
+    prost_config
         .file_descriptor_set_path(&descriptor_path)
         .compile_well_known_types()
         .extern_path(".google.protobuf", "::pbjson_types")
         .extern_path(".test.external", "crate")
         .bytes(&[".test"])
-        .protoc_arg("--experimental_allow_proto3_optional")
-        .compile_protos(&proto_files, &[root])?;
+        .protoc_arg("--experimental_allow_proto3_optional");
+
+    if cfg!(feature = "btree") {
+        prost_config.btree_map([".test"]);
+    }
+
+    prost_config.compile_protos(&proto_files, &[root])?;
 
     let descriptor_set = std::fs::read(&descriptor_path)?;
     let mut builder = pbjson_build::Builder::new();
@@ -38,6 +44,10 @@ fn main() -> Result<()> {
 
     if cfg!(feature = "ignore-unknown-fields") {
         builder.ignore_unknown_fields();
+    }
+
+    if cfg!(feature = "btree") {
+        builder.btree_map([".test"]);
     }
 
     builder.build(&[".test"])?;

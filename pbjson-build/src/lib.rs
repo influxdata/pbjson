@@ -104,6 +104,7 @@ pub struct Builder {
     extern_paths: Vec<(String, String)>,
     retain_enum_prefix: bool,
     ignore_unknown_fields: bool,
+    btree_map_paths: Vec<String>,
 }
 
 impl Builder {
@@ -167,6 +168,13 @@ impl Builder {
     pub fn ignore_unknown_fields(&mut self) -> &mut Self {
         self.ignore_unknown_fields = true;
 
+        self
+    }
+
+    /// Generate Rust BTreeMap implementations for Protobuf map type fields.
+    pub fn btree_map<S: Into<String>, I: IntoIterator<Item = S>>(&mut self, paths: I) -> &mut Self {
+        self.btree_map_paths
+            .extend(paths.into_iter().map(Into::into));
         self
     }
 
@@ -247,7 +255,13 @@ impl Builder {
                 }
                 Descriptor::Message(descriptor) => {
                     if let Some(message) = resolve_message(&self.descriptors, descriptor) {
-                        generate_message(&resolver, &message, writer, self.ignore_unknown_fields)?
+                        generate_message(
+                            &resolver,
+                            &message,
+                            writer,
+                            self.ignore_unknown_fields,
+                            &self.btree_map_paths,
+                        )?
                     }
                 }
             }

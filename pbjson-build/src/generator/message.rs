@@ -38,6 +38,7 @@ pub fn generate_message<W: Write>(
     message: &Message,
     writer: &mut W,
     ignore_unknown_fields: bool,
+    btree_map_paths: &[String],
 ) -> Result<()> {
     let rust_type = resolver.rust_type(&message.path);
 
@@ -55,6 +56,7 @@ pub fn generate_message<W: Write>(
         &rust_type,
         writer,
         ignore_unknown_fields,
+        btree_map_paths,
     )?;
     write_deserialize_end(0, writer)?;
     Ok(())
@@ -435,6 +437,7 @@ fn write_deserialize_message<W: Write>(
     rust_type: &str,
     writer: &mut W,
     ignore_unknown_fields: bool,
+    btree_map_paths: &[String],
 ) -> Result<()> {
     write_deserialize_field_name(2, message, writer, ignore_unknown_fields)?;
 
@@ -485,13 +488,24 @@ fn write_deserialize_message<W: Write>(
 
         writeln!(writer, "{}match k {{", Indent(indent + 3))?;
 
+        let btree_map = btree_map_paths
+            .iter()
+            .any(|prefix| message.path.prefix_match(prefix.as_ref()).is_some());
+
         for field in &message.fields {
-            write_deserialize_field(resolver, indent + 4, field, None, writer)?;
+            write_deserialize_field(resolver, indent + 4, field, None, btree_map, writer)?;
         }
 
         for one_of in &message.one_ofs {
             for field in &one_of.fields {
-                write_deserialize_field(resolver, indent + 4, field, Some(one_of), writer)?;
+                write_deserialize_field(
+                    resolver,
+                    indent + 4,
+                    field,
+                    Some(one_of),
+                    btree_map,
+                    writer,
+                )?;
             }
         }
 
@@ -697,6 +711,7 @@ fn write_deserialize_field<W: Write>(
     indent: usize,
     field: &Field,
     one_of: Option<&OneOf>,
+    btree_map: bool,
     writer: &mut W,
 ) -> Result<()> {
     let field_name = match one_of {
@@ -759,11 +774,18 @@ fn write_deserialize_field<W: Write>(
         },
         FieldType::Map(key, value) => {
             writeln!(writer)?;
-            write!(
-                writer,
-                "{}map.next_value::<std::collections::HashMap<",
-                Indent(indent + 2),
-            )?;
+            match btree_map {
+                true => write!(
+                    writer,
+                    "{}map.next_value::<std::collections::BTreeMap<",
+                    Indent(indent + 2),
+                )?,
+                false => write!(
+                    writer,
+                    "{}map.next_value::<std::collections::HashMap<",
+                    Indent(indent + 2),
+                )?,
+            }
 
             let map_k = match key {
                 ScalarType::Bytes | ScalarType::F32 | ScalarType::F64 => {

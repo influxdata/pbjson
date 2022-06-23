@@ -80,6 +80,15 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "btree")]
+    fn test_btree() {
+        use std::collections::BTreeMap;
+
+        let decoded = serde_json::from_str::<KitchenSink>("{}").unwrap();
+        assert_eq!(decoded.string_dict, BTreeMap::new());
+    }
+
+    #[test]
     fn test_kitchen_sink() {
         let mut decoded: KitchenSink = serde_json::from_str("{}").unwrap();
 
