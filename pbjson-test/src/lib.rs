@@ -61,6 +61,12 @@ mod tests {
         assert_eq!(encoded, "0.0");
         let decoded: Option<DoubleValue> = serde_json::from_str(&encoded).unwrap();
         assert_eq!(decoded, zero);
+
+        let one: Option<DoubleValue> = Some(1.0.into());
+        let encoded = serde_json::to_string(&one).unwrap();
+        assert_eq!(encoded, "1.0");
+        let decoded: Option<DoubleValue> = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, one);
     }
     #[test]
     fn test_string_value() {
@@ -79,6 +85,12 @@ mod tests {
         assert_eq!(encoded, "\"\"");
         let decoded: Option<StringValue> = serde_json::from_str(&encoded).unwrap();
         assert_eq!(decoded, zero);
+
+        let one: Option<StringValue> = Some(String::from("1").into());
+        let encoded = serde_json::to_string(&one).unwrap();
+        assert_eq!(encoded, "\"1\"");
+        let decoded: Option<StringValue> = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, one);
     }
 
     #[test]
