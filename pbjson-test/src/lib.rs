@@ -47,6 +47,53 @@ mod tests {
     use test::syntax3::*;
 
     #[test]
+    fn test_double_value() {
+        use pbjson_types::DoubleValue;
+
+        let null: Option<DoubleValue> = None;
+        let encoded = serde_json::to_string(&null).unwrap();
+        assert_eq!(encoded, "null");
+        let decoded: Option<DoubleValue> = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, null);
+
+        let zero: Option<DoubleValue> = Some(DoubleValue { value: 0.0 });
+        let encoded = serde_json::to_string(&zero).unwrap();
+        assert_eq!(encoded, "0.0");
+        let decoded: Option<DoubleValue> = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, zero);
+
+        let one: Option<DoubleValue> = Some(1.0.into());
+        let encoded = serde_json::to_string(&one).unwrap();
+        assert_eq!(encoded, "1.0");
+        let decoded: Option<DoubleValue> = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, one);
+    }
+    #[test]
+    fn test_string_value() {
+        use pbjson_types::StringValue;
+
+        let null: Option<StringValue> = None;
+        let encoded = serde_json::to_string(&null).unwrap();
+        assert_eq!(encoded, "null");
+        let decoded: Option<StringValue> = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, null);
+
+        let zero: Option<StringValue> = Some(StringValue {
+            value: String::new(),
+        });
+        let encoded = serde_json::to_string(&zero).unwrap();
+        assert_eq!(encoded, "\"\"");
+        let decoded: Option<StringValue> = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, zero);
+
+        let one: Option<StringValue> = Some(String::from("1").into());
+        let encoded = serde_json::to_string(&one).unwrap();
+        assert_eq!(encoded, "\"1\"");
+        let decoded: Option<StringValue> = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, one);
+    }
+
+    #[test]
     #[cfg(not(feature = "ignore-unknown-fields"))]
     fn test_unknown_field_error() {
         let message = Empty {};
