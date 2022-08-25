@@ -36,6 +36,7 @@ fn main() -> Result<()> {
             ".google.protobuf.ListValue",
             ".google.protobuf.NullValue",
             ".google.protobuf.BoolValue",
+            ".google.protobuf.BytesValue",
             ".google.protobuf.DoubleValue",
             ".google.protobuf.FloatValue",
             ".google.protobuf.Int32Value",
