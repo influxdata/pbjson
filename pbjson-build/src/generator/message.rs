@@ -63,6 +63,10 @@ pub fn generate_message<W: Write>(
 }
 
 fn write_field_empty_predicate<W: Write>(member: &Field, writer: &mut W) -> Result<()> {
+    #[cfg(feature = "emit_fields")]
+    return write!(writer, "true");
+
+    #[cfg(not(feature = "emit_fields"))]
     match (&member.field_type, &member.field_modifier) {
         (_, FieldModifier::Required) => unreachable!(),
         (_, FieldModifier::Repeated)
