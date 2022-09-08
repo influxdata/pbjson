@@ -50,6 +50,10 @@ fn main() -> Result<()> {
         builder.btree_map([".test"]);
     }
 
+    if cfg!(feature = "emit-fields") {
+        builder.emit_fields();
+    }
+
     builder.build(&[".test"])?;
 
     Ok(())

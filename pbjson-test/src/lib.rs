@@ -89,6 +89,14 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "emit-fields")]
+    fn test_emit_fields() {
+        let mut decoded: KitchenSink = serde_json::from_str("{}").unwrap();
+        assert_ne!(serde_json::to_string(&decoded).unwrap().as_str(), "{}");
+    }
+
+    #[test]
+    #[cfg(not(feature = "emit-fields"))]
     fn test_kitchen_sink() {
         let mut decoded: KitchenSink = serde_json::from_str("{}").unwrap();
 

@@ -9,9 +9,6 @@ keywords = ["protobuf", "json", "serde"]
 categories = ["encoding"]
 repository = "https://github.com/influxdata/pbjson"
 
-[features]
-emit_fields = []
-
 [dependencies]
 heck = "0.4"
 prost = "0.11"

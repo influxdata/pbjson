@@ -39,12 +39,13 @@ pub fn generate_message<W: Write>(
     writer: &mut W,
     ignore_unknown_fields: bool,
     btree_map_paths: &[String],
+    emit_fields: bool
 ) -> Result<()> {
     let rust_type = resolver.rust_type(&message.path);
 
     // Generate Serialize
     write_serialize_start(0, &rust_type, writer)?;
-    write_message_serialize(resolver, 2, message, writer)?;
+    write_message_serialize(resolver, 2, message, writer, emit_fields)?;
     write_serialize_end(0, writer)?;
 
     // Generate Deserialize
@@ -62,11 +63,15 @@ pub fn generate_message<W: Write>(
     Ok(())
 }
 
-fn write_field_empty_predicate<W: Write>(member: &Field, writer: &mut W) -> Result<()> {
-    #[cfg(feature = "emit_fields")]
-    return write!(writer, "true");
+fn write_field_empty_predicate<W: Write>(
+    member: &Field,
+    writer: &mut W,
+    emit_fields: bool,
+) -> Result<()> {
+    if emit_fields {
+        return write!(writer, "true");
+    }
 
-    #[cfg(not(feature = "emit_fields"))]
     match (&member.field_type, &member.field_modifier) {
         (_, FieldModifier::Required) => unreachable!(),
         (_, FieldModifier::Repeated)
@@ -100,11 +105,12 @@ fn write_message_serialize<W: Write>(
     indent: usize,
     message: &Message,
     writer: &mut W,
+    emit_fields: bool,
 ) -> Result<()> {
-    write_struct_serialize_start(indent, message, writer)?;
+    write_struct_serialize_start(indent, message, writer, emit_fields)?;
 
     for field in &message.fields {
-        write_serialize_field(resolver, indent, field, writer)?;
+        write_serialize_field(resolver, indent, field, writer, emit_fields)?;
     }
 
     for one_of in &message.one_ofs {
@@ -118,6 +124,7 @@ fn write_struct_serialize_start<W: Write>(
     indent: usize,
     message: &Message,
     writer: &mut W,
+    emit_fields: bool,
 ) -> Result<()> {
     writeln!(writer, "{}use serde::ser::SerializeStruct;", Indent(indent))?;
 
@@ -138,7 +145,7 @@ fn write_struct_serialize_start<W: Write>(
             continue;
         }
         write!(writer, "{}if ", Indent(indent))?;
-        write_field_empty_predicate(field, writer)?;
+        write_field_empty_predicate(field, writer, emit_fields)?;
         writeln!(writer, " {{")?;
         writeln!(writer, "{}len += 1;", Indent(indent + 1))?;
         writeln!(writer, "{}}}", Indent(indent))?;
@@ -361,6 +368,7 @@ fn write_serialize_field<W: Write>(
     indent: usize,
     field: &Field,
     writer: &mut W,
+    emit_fields: bool,
 ) -> Result<()> {
     let as_ref = format!("&self.{}", field.rust_field_name());
     let variable = Variable {
@@ -390,7 +398,7 @@ fn write_serialize_field<W: Write>(
         }
         FieldModifier::Repeated | FieldModifier::UseDefault => {
             write!(writer, "{}if ", Indent(indent))?;
-            write_field_empty_predicate(field, writer)?;
+            write_field_empty_predicate(field, writer, emit_fields)?;
             writeln!(writer, " {{")?;
             write_serialize_variable(resolver, indent + 1, field, variable, writer)?;
             writeln!(writer, "{}}}", Indent(indent))?;

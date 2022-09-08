@@ -105,6 +105,7 @@ pub struct Builder {
     retain_enum_prefix: bool,
     ignore_unknown_fields: bool,
     btree_map_paths: Vec<String>,
+    emit_fields:bool,
 }
 
 impl Builder {
@@ -175,6 +176,12 @@ impl Builder {
     pub fn btree_map<S: Into<String>, I: IntoIterator<Item = S>>(&mut self, paths: I) -> &mut Self {
         self.btree_map_paths
             .extend(paths.into_iter().map(Into::into));
+        self
+    }
+
+    /// Output fields with their default values.
+    pub fn emit_fields(&mut self) -> &mut Self {
+        self.emit_fields = true;
         self
     }
 
@@ -261,6 +268,7 @@ impl Builder {
                             writer,
                             self.ignore_unknown_fields,
                             &self.btree_map_paths,
+                            self.emit_fields,
                         )?
                     }
                 }

@@ -131,6 +131,9 @@ jobs:
       - run:
           name: Cargo test (btree)
           command: cargo test --workspace --features btree
+      - run:
+          name: Cargo test (emit fields)
+          command: cargo test --workspace --features emit-fields
       - cache_save
 
 workflows:
