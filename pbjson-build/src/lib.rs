@@ -105,7 +105,7 @@ pub struct Builder {
     retain_enum_prefix: bool,
     ignore_unknown_fields: bool,
     btree_map_paths: Vec<String>,
-    emit_fields:bool,
+    emit_fields: bool,
 }
 
 impl Builder {

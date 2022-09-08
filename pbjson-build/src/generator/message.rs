@@ -39,7 +39,7 @@ pub fn generate_message<W: Write>(
     writer: &mut W,
     ignore_unknown_fields: bool,
     btree_map_paths: &[String],
-    emit_fields: bool
+    emit_fields: bool,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(&message.path);
 
