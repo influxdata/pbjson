@@ -10,7 +10,6 @@ categories = ["encoding"]
 repository = "https://github.com/influxdata/pbjson"
 
 [dependencies]
-
 heck = "0.4"
 prost = "0.11"
 prost-types = "0.11"
