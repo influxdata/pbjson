@@ -36,6 +36,16 @@ pub mod test {
         include!(concat!(env!("OUT_DIR"), "/test.duplicate_name.rs"));
         include!(concat!(env!("OUT_DIR"), "/test.duplicate_name.serde.rs"));
     }
+    pub mod escape {
+        include!(concat!(
+            env!("OUT_DIR"),
+            "/test.r#abstract.r#type.escape.rs"
+        ));
+        include!(concat!(
+            env!("OUT_DIR"),
+            "/test.r#abstract.r#type.escape.serde.rs"
+        ));
+    }
 }
 
 #[cfg(test)]
