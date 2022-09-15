@@ -18,6 +18,7 @@ pub fn generate_enum<W: Write>(
     path: &TypePath,
     descriptor: &EnumDescriptor,
     writer: &mut W,
+    use_integers_for_enums: bool,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(path);
 
@@ -26,31 +27,48 @@ pub fn generate_enum<W: Write>(
         .iter()
         .map(|variant| {
             let variant_name = variant.name.clone().unwrap();
+            let variant_number = variant.number();
             let rust_variant = resolver.rust_variant(path, &variant_name);
-            (variant_name, rust_variant)
+            (variant_name, variant_number, rust_variant)
         })
         .collect();
 
     // Generate Serialize
     write_serialize_start(0, &rust_type, writer)?;
-    writeln!(writer, "{}let variant = match self {{", Indent(2))?;
-    for (variant_name, rust_variant) in &variants {
-        writeln!(
-            writer,
-            "{}Self::{} => \"{}\",",
-            Indent(3),
-            rust_variant,
-            variant_name
-        )?;
-    }
-    writeln!(writer, "{}}};", Indent(2))?;
+    if use_integers_for_enums {
+        writeln!(writer, "{}let variant = match self {{", Indent(2))?;
+        for (_, variant_number, rust_variant) in &variants {
+            writeln!(
+                writer,
+                "{}Self::{} => {},",
+                Indent(3),
+                rust_variant,
+                variant_number
+            )?;
+        }
+        writeln!(writer, "{}}};", Indent(2))?;
 
-    writeln!(writer, "{}serializer.serialize_str(variant)", Indent(2))?;
+        writeln!(writer, "{}serializer.serialize_i32(variant)", Indent(2))?;
+    } else {
+        writeln!(writer, "{}let variant = match self {{", Indent(2))?;
+        for (variant_name, _, rust_variant) in &variants {
+            writeln!(
+                writer,
+                "{}Self::{} => \"{}\",",
+                Indent(3),
+                rust_variant,
+                variant_name
+            )?;
+        }
+        writeln!(writer, "{}}};", Indent(2))?;
+
+        writeln!(writer, "{}serializer.serialize_str(variant)", Indent(2))?;
+    }
     write_serialize_end(0, writer)?;
 
     // Generate Deserialize
     write_deserialize_start(0, &rust_type, writer)?;
-    write_fields_array(writer, 2, variants.iter().map(|(name, _)| name.as_str()))?;
+    write_fields_array(writer, 2, variants.iter().map(|(name, _, _)| name.as_str()))?;
     write_visitor(writer, 2, &rust_type, &variants)?;
 
     // Use deserialize_any to allow users to provide integers or strings
@@ -68,7 +86,7 @@ fn write_visitor<W: Write>(
     writer: &mut W,
     indent: usize,
     rust_type: &str,
-    variants: &[(String, String)],
+    variants: &[(String, i32, String)],
 ) -> Result<()> {
     // Protobuf supports deserialization of enumerations both from string and integer values
     writeln!(
@@ -117,7 +135,7 @@ fn write_visitor<W: Write>(
     )?;
 
     writeln!(writer, "{}match value {{", Indent(indent + 2))?;
-    for (variant_name, rust_variant) in variants {
+    for (variant_name, _, rust_variant) in variants {
         writeln!(
             writer,
             "{}\"{}\" => Ok({}::{}),",

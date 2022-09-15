@@ -134,6 +134,9 @@ jobs:
       - run:
           name: Cargo test (emit fields)
           command: cargo test --workspace --features emit-fields
+      - run:
+          name: Cargo test (use integers for enums)
+          command: cargo test --workspace --features use-integers-for-enums
       - cache_save
 
 workflows:
