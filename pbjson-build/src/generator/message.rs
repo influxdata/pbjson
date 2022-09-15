@@ -8,7 +8,7 @@
 //! - 32-bit integers and floats are encoded as numbers
 //! - 64-bit integers are encoded as strings
 //! - repeated fields are encoded as arrays
-//! - bytes are base64 encoded (NOT CURRENTLY SUPPORTED)
+//! - bytes are base64 encoded
 //! - messages and maps are encoded as objects
 //! - fields are lowerCamelCase except where overridden by the proto definition
 //! - default values are not emitted on encode

@@ -358,5 +358,62 @@ mod tests {
 
         decoded.mixed_case = MixedCase::C as _;
         verify(&decoded, r#"{"mixedCase":"c"}"#);
+
+        decoded.mixed_case = MixedCase::Unknown as _;
+        verify(&decoded, r#"{}"#);
+
+        decoded.bool_value = Some(true.into());
+        verify(&decoded, r#"{"boolValue":true}"#);
+
+        decoded.bool_value = Some(false.into());
+        verify(&decoded, r#"{"boolValue":false}"#);
+
+        decoded.bool_value = None;
+        verify(&decoded, r#"{}"#);
+
+        decoded.bytes_value = Some(prost::bytes::Bytes::from_static(b"kjkjkj").into());
+        verify(&decoded, r#"{"bytesValue":"a2pramtq"}"#);
+
+        decoded.bytes_value = Some(prost::bytes::Bytes::new().into());
+        verify(&decoded, r#"{"bytesValue":""}"#);
+
+        decoded.bytes_value = None;
+        verify(&decoded, r#"{}"#);
+
+        decoded.double_value = Some(1.1.into());
+        verify(&decoded, r#"{"doubleValue":1.1}"#);
+
+        decoded.double_value = Some(0.0.into());
+        verify(&decoded, r#"{"doubleValue":0.0}"#);
+
+        decoded.double_value = None;
+        verify(&decoded, r#"{}"#);
+
+        decoded.uint32_value = Some(1.into());
+        verify(&decoded, r#"{"uint32Value":1}"#);
+
+        decoded.uint32_value = Some(0.into());
+        verify(&decoded, r#"{"uint32Value":0}"#);
+
+        decoded.uint32_value = None;
+        verify(&decoded, r#"{}"#);
+
+        decoded.uint64_value = Some(1.into());
+        verify(&decoded, r#"{"uint64Value":"1"}"#);
+
+        decoded.uint64_value = Some(0.into());
+        verify(&decoded, r#"{"uint64Value":"0"}"#);
+
+        decoded.uint64_value = None;
+        verify(&decoded, r#"{}"#);
+
+        decoded.string_value = Some(String::from("1").into());
+        verify(&decoded, r#"{"stringValue":"1"}"#);
+
+        decoded.string_value = Some(String::new().into());
+        verify(&decoded, r#"{"stringValue":""}"#);
+
+        decoded.string_value = None;
+        verify(&decoded, r#"{}"#);
     }
 }

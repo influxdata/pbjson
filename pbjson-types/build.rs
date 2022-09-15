@@ -35,6 +35,15 @@ fn main() -> Result<()> {
             ".google.protobuf.Struct",
             ".google.protobuf.ListValue",
             ".google.protobuf.NullValue",
+            ".google.protobuf.BoolValue",
+            ".google.protobuf.BytesValue",
+            ".google.protobuf.DoubleValue",
+            ".google.protobuf.FloatValue",
+            ".google.protobuf.Int32Value",
+            ".google.protobuf.Int64Value",
+            ".google.protobuf.StringValue",
+            ".google.protobuf.UInt32Value",
+            ".google.protobuf.UInt64Value",
         ])
         .build(&[".google"])?;
 

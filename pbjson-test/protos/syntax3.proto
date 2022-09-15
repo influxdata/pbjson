@@ -5,6 +5,7 @@ package test.syntax3;
 import "common.proto";
 import "external.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
 
 message Empty {}
@@ -40,7 +41,7 @@ message KitchenSink {
   repeated uint32 repeated_u32 = 6;
 
   int64 i64 = 7;
-  optional int64  optional_i64 = 8;
+  optional int64 optional_i64 = 8;
   repeated int64 repeated_i64 = 9;
 
   uint64 u64 = 10;
@@ -97,4 +98,14 @@ message KitchenSink {
 
   // https://github.com/influxdata/pbjson/issues/27
   // map<bool, bytes> bool_bytes_dict = 46;
+
+  google.protobuf.BoolValue bool_value = 47;
+  google.protobuf.BytesValue bytes_value = 48;
+  google.protobuf.DoubleValue double_value = 49;
+  google.protobuf.FloatValue float_value = 51;
+  google.protobuf.Int32Value int32_value = 52;
+  google.protobuf.Int64Value int64_value = 53;
+  google.protobuf.StringValue string_value = 54;
+  google.protobuf.UInt32Value uint32_value = 55;
+  google.protobuf.UInt64Value uint64_value = 56;
 }
