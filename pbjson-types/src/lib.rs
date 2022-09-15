@@ -42,5 +42,6 @@ mod null_value;
 mod r#struct;
 mod timestamp;
 pub mod value;
+mod wrappers;
 
 pub use pb::google::protobuf::*;
