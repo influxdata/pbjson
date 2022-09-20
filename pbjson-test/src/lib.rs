@@ -50,6 +50,8 @@ pub mod test {
 
 #[cfg(test)]
 mod tests {
+    use std::error::Error;
+
     use super::*;
     use crate::test::syntax3::kitchen_sink::MixedCase;
     use chrono::TimeZone;
@@ -416,5 +418,28 @@ mod tests {
 
         decoded.string_value = None;
         verify(&decoded, r#"{}"#);
+    }
+
+    #[test]
+    fn test_escaped() -> Result<(), Box<dyn Error>> {
+        use super::test::escape::{Abstract, Target, Type};
+
+        let r#type = Type { example: true };
+        let r#abstract = Abstract {
+            r#type: Some(r#type),
+        };
+        let target = Target {
+            r#abstract: Some(r#abstract),
+        };
+
+        let encoded = serde_json::to_string(&target)?;
+
+        let expected = r#"{"abstract":{"type":{"example":true}}}"#;
+        assert_eq!(encoded, expected);
+
+        let decoded = serde_json::from_str::<Target>(&encoded)?;
+        assert_eq!(decoded, target);
+
+        Ok(())
     }
 }
