@@ -16,6 +16,7 @@ serde = { version = "1.0", features = ["derive"] }
 ignore-unknown-fields = []
 btree = []
 emit-fields = []
+use-integers-for-enums = []
 
 [dev-dependencies]
 chrono = "0.4"

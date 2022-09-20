@@ -54,6 +54,10 @@ fn main() -> Result<()> {
         builder.emit_fields();
     }
 
+    if cfg!(feature = "use-integers-for-enums") {
+        builder.use_integers_for_enums();
+    }
+
     builder.build(&[".test"])?;
 
     Ok(())

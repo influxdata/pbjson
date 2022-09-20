@@ -46,6 +46,19 @@ mod tests {
     use pbjson_types::{Duration, Timestamp};
     use test::syntax3::*;
 
+    fn verify_encode(decoded: &KitchenSink, expected: &str) {
+        assert_eq!(serde_json::to_string(&decoded).unwrap().as_str(), expected);
+    }
+
+    fn verify_decode(decoded: &KitchenSink, expected: &str) {
+        assert_eq!(decoded, &serde_json::from_str(expected).unwrap());
+    }
+
+    fn verify(decoded: &KitchenSink, expected: &str) {
+        verify_encode(decoded, expected);
+        verify_decode(decoded, expected);
+    }
+
     #[test]
     #[cfg(not(feature = "ignore-unknown-fields"))]
     fn test_unknown_field_error() {
@@ -96,22 +109,18 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(feature = "emit-fields"))]
+    #[cfg(all(not(feature = "emit-fields"), feature = "use-integers-for-enums"))]
+    fn test_use_integers_for_enums() {
+        let mut decoded: KitchenSink = serde_json::from_str("{}").unwrap();
+        assert_eq!(serde_json::to_string(&decoded).unwrap().as_str(), "{}");
+        decoded.value = kitchen_sink::Value::A as i32;
+        verify(&decoded, r#"{"value":45}"#);
+    }
+
+    #[test]
+    #[cfg(not(any(feature = "emit-fields", feature = "use-integers-for-enums")))]
     fn test_kitchen_sink() {
         let mut decoded: KitchenSink = serde_json::from_str("{}").unwrap();
-
-        let verify_encode = |decoded: &KitchenSink, expected: &str| {
-            assert_eq!(serde_json::to_string(&decoded).unwrap().as_str(), expected);
-        };
-
-        let verify_decode = |decoded: &KitchenSink, expected: &str| {
-            assert_eq!(decoded, &serde_json::from_str(expected).unwrap());
-        };
-
-        let verify = |decoded: &KitchenSink, expected: &str| {
-            verify_encode(decoded, expected);
-            verify_decode(decoded, expected);
-        };
 
         verify(&decoded, "{}");
         decoded.i32 = 24;

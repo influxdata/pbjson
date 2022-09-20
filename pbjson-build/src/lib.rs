@@ -106,6 +106,7 @@ pub struct Builder {
     ignore_unknown_fields: bool,
     btree_map_paths: Vec<String>,
     emit_fields: bool,
+    use_integers_for_enums: bool,
 }
 
 impl Builder {
@@ -184,6 +185,11 @@ impl Builder {
         self.emit_fields = true;
         self
     }
+    // print integers instead of enum names.
+    pub fn use_integers_for_enums(&mut self) -> &mut Self {
+        self.use_integers_for_enums = true;
+        self
+    }
 
     /// Generates code for all registered types where `prefixes` contains a prefix of
     /// the fully-qualified path of the type
@@ -257,9 +263,13 @@ impl Builder {
             );
 
             match descriptor {
-                Descriptor::Enum(descriptor) => {
-                    generate_enum(&resolver, type_path, descriptor, writer)?
-                }
+                Descriptor::Enum(descriptor) => generate_enum(
+                    &resolver,
+                    type_path,
+                    descriptor,
+                    writer,
+                    self.use_integers_for_enums,
+                )?,
                 Descriptor::Message(descriptor) => {
                     if let Some(message) = resolve_message(&self.descriptors, descriptor) {
                         generate_message(
