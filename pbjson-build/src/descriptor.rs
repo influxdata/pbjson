@@ -12,6 +12,8 @@ use prost_types::{
     FileDescriptorProto, FileDescriptorSet, MessageOptions, OneofDescriptorProto,
 };
 
+use crate::escape::escape_ident;
+
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct Package {
     path: Vec<TypeName>,
@@ -19,9 +21,9 @@ pub struct Package {
 
 impl Display for Package {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.path[0].to_snake_case())?;
+        write!(f, "{}", self.path[0].to_snake_case_ident())?;
         for element in &self.path[1..self.path.len()] {
-            write!(f, ".{}", element.to_snake_case())?;
+            write!(f, ".{}", element.to_snake_case_ident())?;
         }
         Ok(())
     }
@@ -66,9 +68,9 @@ impl TypeName {
         Self(s)
     }
 
-    pub fn to_snake_case(&self) -> String {
+    pub fn to_snake_case_ident(&self) -> String {
         use heck::ToSnakeCase;
-        self.0.to_snake_case()
+        escape_ident(self.0.to_snake_case())
     }
 
     pub fn to_upper_camel_case(&self) -> String {
@@ -298,5 +300,13 @@ mod tests {
             Package::new("fooBar.baz.boo").to_string(),
             String::from("foo_bar.baz.boo")
         )
+    }
+
+    #[test]
+    fn escape_keywords() {
+        assert_eq!(
+            Package::new("type.abstract").to_string(),
+            "r#type.r#abstract"
+        );
     }
 }

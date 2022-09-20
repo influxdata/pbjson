@@ -1,0 +1,14 @@
+syntax = "proto3";
+package test.abstract.type.escape;
+
+message Target {
+    Abstract abstract = 1;
+}
+
+message Abstract {
+  Type type = 1;
+}
+
+message Type {
+    bool example = 1;
+}
