@@ -75,7 +75,7 @@ impl<'a> Resolver<'a> {
         while let Some(i) = iter.next() {
             match iter.peek() {
                 Some(_) => {
-                    ret.push_str(i.to_snake_case().as_str());
+                    ret.push_str(i.to_snake_case_ident().as_str());
                     ret.push_str("::");
                 }
                 None => {
