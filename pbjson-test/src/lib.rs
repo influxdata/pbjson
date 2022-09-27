@@ -63,7 +63,16 @@ mod tests {
     }
 
     fn verify_decode(decoded: &KitchenSink, expected: &str) {
+        // Decode from a string first
         assert_eq!(decoded, &serde_json::from_str(expected).unwrap());
+
+        // Then, try decoding from a Reader: this can catch issues when trying to borrow data
+        // from the input, which is not possible when deserializing from a Reader (e.g. an opened
+        // file).
+        assert_eq!(
+            decoded,
+            &serde_json::from_reader(expected.as_bytes()).unwrap()
+        );
     }
 
     fn verify(decoded: &KitchenSink, expected: &str) {

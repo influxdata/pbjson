@@ -22,7 +22,9 @@ pub mod private {
     /// Re-export base64
     pub use base64;
 
+    use serde::de::Visitor;
     use serde::Deserialize;
+    use std::borrow::Cow;
     use std::str::FromStr;
 
     /// Used to parse a number from either a string or its raw representation
@@ -32,7 +34,8 @@ pub mod private {
     #[derive(Deserialize)]
     #[serde(untagged)]
     enum Content<'a, T> {
-        Str(&'a str),
+        #[serde(borrow)]
+        Str(Cow<'a, str>),
         Number(T),
     }
 
@@ -53,19 +56,19 @@ pub mod private {
         }
     }
 
-    #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Hash, Ord, Eq)]
-    pub struct BytesDeserialize<T>(pub T);
+    struct Base64Visitor;
 
-    impl<'de, T> Deserialize<'de> for BytesDeserialize<T>
-    where
-        T: From<Vec<u8>>,
-    {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    impl<'de> Visitor<'de> for Base64Visitor {
+        type Value = Vec<u8>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str("a base64 string")
+        }
+
+        fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
         where
-            D: serde::Deserializer<'de>,
+            E: serde::de::Error,
         {
-            let s: &str = Deserialize::deserialize(deserializer)?;
-
             let decoded = base64::decode_config(s, base64::STANDARD)
                 .or_else(|e| match e {
                     // Either standard or URL-safe base64 encoding are accepted
@@ -80,8 +83,22 @@ pub mod private {
                     _ => Err(e),
                 })
                 .map_err(serde::de::Error::custom)?;
+            Ok(decoded)
+        }
+    }
 
-            Ok(Self(decoded.into()))
+    #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Hash, Ord, Eq)]
+    pub struct BytesDeserialize<T>(pub T);
+
+    impl<'de, T> Deserialize<'de> for BytesDeserialize<T>
+    where
+        T: From<Vec<u8>>,
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            Ok(Self(deserializer.deserialize_str(Base64Visitor)?.into()))
         }
     }
 
