@@ -427,6 +427,34 @@ mod tests {
 
         decoded.string_value = None;
         verify(&decoded, r#"{}"#);
+
+        // Test explicit null optional scalar
+        verify_decode(&decoded, r#"{"optionalU32":null}"#);
+        verify_decode(&decoded, r#"{"optionalU64":null}"#);
+        verify_decode(&decoded, r#"{"optionalString":null}"#);
+
+        // Test explicit null optional enum
+        verify_decode(&decoded, r#"{"optionalValue":null}"#);
+
+        // Test explicit null message
+        verify_decode(&decoded, r#"{"empty":null}"#);
+
+        // Test explicit null in oneof
+        verify_decode(&decoded, r#"{"oneOfI32":null}"#);
+        verify_decode(&decoded, r#"{"oneOfBool":null}"#);
+        verify_decode(&decoded, r#"{"oneOfValue":null}"#);
+        verify_decode(&decoded, r#"{"oneOfMessage":null}"#);
+
+        // Test explicit null value type
+        verify_decode(&decoded, r#"{"boolValue":null}"#);
+        verify_decode(&decoded, r#"{"bytesValue":null}"#);
+        verify_decode(&decoded, r#"{"doubleValue":null}"#);
+        verify_decode(&decoded, r#"{"floatValue":null}"#);
+        verify_decode(&decoded, r#"{"int32Value":null}"#);
+        verify_decode(&decoded, r#"{"int64Value":null}"#);
+        verify_decode(&decoded, r#"{"stringValue":null}"#);
+        verify_decode(&decoded, r#"{"uint32Value":null}"#);
+        verify_decode(&decoded, r#"{"uint64Value":null}"#);
     }
 
     #[test]
