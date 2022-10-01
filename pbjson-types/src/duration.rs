@@ -1,5 +1,6 @@
 use crate::Duration;
-use serde::{Deserialize, Serialize};
+use serde::de::Visitor;
+use serde::Serialize;
 
 impl TryFrom<Duration> for std::time::Duration {
     type Error = std::num::TryFromIntError;
@@ -55,12 +56,19 @@ impl Serialize for Duration {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Duration {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+struct DurationVisitor;
+
+impl<'de> Visitor<'de> for DurationVisitor {
+    type Value = Duration;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("a duration string")
+    }
+
+    fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
     where
-        D: serde::Deserializer<'de>,
+        E: serde::de::Error,
     {
-        let s: &str = Deserialize::deserialize(deserializer)?;
         let s = s
             .strip_suffix('s')
             .ok_or_else(|| serde::de::Error::custom("missing 's' suffix"))?;
@@ -70,7 +78,7 @@ impl<'de> serde::Deserialize<'de> for Duration {
             None => (false, s),
         };
 
-        let duration: Self = match s.split_once('.') {
+        let duration = match s.split_once('.') {
             Some((seconds_str, decimal_str)) => {
                 let exp = 9_u32
                     .checked_sub(decimal_str.len() as u32)
@@ -80,24 +88,33 @@ impl<'de> serde::Deserialize<'de> for Duration {
                 let seconds = seconds_str.parse().map_err(serde::de::Error::custom)?;
                 let decimal: u32 = decimal_str.parse().map_err(serde::de::Error::custom)?;
 
-                Self {
+                Duration {
                     seconds,
                     nanos: (decimal * pow) as i32,
                 }
             }
-            None => Self {
+            None => Duration {
                 seconds: s.parse().map_err(serde::de::Error::custom)?,
                 nanos: 0,
             },
         };
 
         Ok(match negative {
-            true => Self {
+            true => Duration {
                 seconds: -duration.seconds,
                 nanos: -duration.nanos,
             },
             false => duration,
         })
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Duration {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_str(DurationVisitor)
     }
 }
 
