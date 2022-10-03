@@ -149,6 +149,7 @@ mod tests {
 
         // Can also decode from string
         verify_decode(&decoded, r#"{"optionalI32":"0"}"#);
+        verify_decode(&decoded, r#"{"optional_i32":"0"}"#);
 
         decoded.optional_i32 = None;
         verify_decode(&decoded, "{}");
@@ -168,6 +169,7 @@ mod tests {
 
         // Can also decode from non-string
         verify_decode(&decoded, r#"{"optionalI64":0}"#);
+        verify_decode(&decoded, r#"{"optional_i64":0}"#);
 
         decoded.optional_i64 = None;
         verify_decode(&decoded, "{}");
@@ -191,6 +193,7 @@ mod tests {
         verify(&decoded, r#"{"repeatedI32":[0,23,5,6,2,34]}"#);
         // Can also mix in some strings
         verify_decode(&decoded, r#"{"repeatedI32":[0,"23",5,6,"2",34]}"#);
+        verify_decode(&decoded, r#"{"repeated_i32":[0,"23",5,6,"2",34]}"#);
 
         decoded.repeated_i32 = vec![];
         verify_decode(&decoded, "{}");
@@ -199,6 +202,7 @@ mod tests {
         verify(&decoded, r#"{"repeatedU64":["0","532","2"]}"#);
         // Can also mix in some non-strings
         verify_decode(&decoded, r#"{"repeatedU64":["0",532,"2"]}"#);
+        verify_decode(&decoded, r#"{"repeated_u64":["0",532,"2"]}"#);
 
         decoded.repeated_u64 = vec![];
         verify_decode(&decoded, "{}");
@@ -218,6 +222,7 @@ mod tests {
 
         // Can also use variant number
         verify_decode(&decoded, r#"{"optionalValue":0}"#);
+        verify_decode(&decoded, r#"{"optional_value":0}"#);
 
         decoded.optional_value = None;
         verify_decode(&decoded, "{}");
@@ -238,6 +243,7 @@ mod tests {
         verify(&decoded, r#"{"int32Dict":{"343":"A"}}"#);
         // Enum dictionary values can be decoded from integers
         verify_decode(&decoded, r#"{"int32Dict":{"343":66}}"#);
+        verify_decode(&decoded, r#"{"int32_dict":{"343":66}}"#);
 
         decoded.int32_dict = Default::default();
         verify_decode(&decoded, "{}");
@@ -247,6 +253,7 @@ mod tests {
         verify(&decoded, r#"{"integerDict":{"12":"13"}}"#);
         // 64-bit dictionary values can be decoded from numeric types
         verify_decode(&decoded, r#"{"integerDict":{"12":13}}"#);
+        verify_decode(&decoded, r#"{"integer_dict":{"12":13}}"#);
 
         decoded.integer_dict = Default::default();
         verify_decode(&decoded, "{}");
@@ -255,6 +262,7 @@ mod tests {
         verify(&decoded, r#"{"oneOfI32":0}"#);
         // Can also specify string
         verify_decode(&decoded, r#"{"oneOfI32":"0"}"#);
+        verify_decode(&decoded, r#"{"one_of_i32":"0"}"#);
 
         decoded.one_of = Some(kitchen_sink::OneOf::OneOfI32(12));
         verify(&decoded, r#"{"oneOfI32":12}"#);
@@ -271,6 +279,7 @@ mod tests {
         verify(&decoded, r#"{"oneOfValue":"VALUE_B"}"#);
         // Can also specify enum variant
         verify_decode(&decoded, r#"{"oneOfValue":63}"#);
+        verify_decode(&decoded, r#"{"one_of_value":63}"#);
 
         decoded.one_of = None;
         verify_decode(&decoded, "{}");
@@ -285,6 +294,7 @@ mod tests {
             r#"{"repeatedValue":["VALUE_B","VALUE_B","VALUE_A"]}"#,
         );
         verify_decode(&decoded, r#"{"repeatedValue":[63,"VALUE_B","VALUE_A"]}"#);
+        verify_decode(&decoded, r#"{"repeated_value":[63,"VALUE_B","VALUE_A"]}"#);
 
         decoded.repeated_value = Default::default();
         verify_decode(&decoded, "{}");

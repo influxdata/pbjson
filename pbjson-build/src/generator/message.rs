@@ -610,14 +610,26 @@ fn write_deserialize_field_name<W: Write>(
 ) -> Result<()> {
     let fields: Vec<_> = message
         .all_fields()
-        .map(|field| (field.json_name(), field.rust_type_name()))
+        .map(|field| {
+            let json_name = field.json_name();
+            // only carry the original proto name if it's different from the provided json name
+            let proto_name =
+                Some(field.name.as_str()).filter(|proto_name| proto_name != &json_name);
+            (json_name, field.rust_type_name(), proto_name)
+        })
         .collect();
 
-    write_fields_array(writer, indent, fields.iter().map(|(name, _)| name.as_str()))?;
+    write_fields_array(
+        writer,
+        indent,
+        fields.iter().flat_map(|(json_name, _, proto_name)| {
+            proto_name.iter().copied().chain([json_name.as_str()])
+        }),
+    )?;
     write_fields_enum(
         writer,
         indent,
-        fields.iter().map(|(_, name)| name.as_str()),
+        fields.iter().map(|(_, type_name, _)| type_name.as_str()),
         ignore_unknown_fields,
     )?;
 
@@ -647,14 +659,25 @@ fn write_deserialize_field_name<W: Write>(
 
     if !fields.is_empty() {
         writeln!(writer, "{}match value {{", Indent(indent + 4))?;
-        for (json_name, type_name) in &fields {
-            writeln!(
-                writer,
-                "{}\"{}\" => Ok(GeneratedField::{}),",
-                Indent(indent + 5),
-                json_name,
-                type_name
-            )?;
+        for (json_name, type_name, proto_name) in &fields {
+            if let Some(proto_name) = proto_name {
+                writeln!(
+                    writer,
+                    "{}\"{}\" | \"{}\" => Ok(GeneratedField::{}),",
+                    Indent(indent + 5),
+                    json_name,
+                    proto_name,
+                    type_name
+                )?;
+            } else {
+                writeln!(
+                    writer,
+                    "{}\"{}\" => Ok(GeneratedField::{}),",
+                    Indent(indent + 5),
+                    json_name,
+                    type_name
+                )?;
+            }
         }
         if ignore_unknown_fields {
             writeln!(
