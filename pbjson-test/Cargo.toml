@@ -17,6 +17,7 @@ ignore-unknown-fields = []
 btree = []
 emit-fields = []
 use-integers-for-enums = []
+preserve-proto-field-names = []
 
 [dev-dependencies]
 chrono = "0.4"
