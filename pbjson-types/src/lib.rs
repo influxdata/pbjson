@@ -27,14 +27,7 @@
     clippy::enum_variant_names,
     clippy::use_self
 )]
-mod pb {
-    pub mod google {
-        pub mod protobuf {
-            include!(concat!(env!("OUT_DIR"), "/google.protobuf.rs"));
-            include!(concat!(env!("OUT_DIR"), "/google.protobuf.serde.rs"));
-        }
-    }
-}
+mod pb;
 
 mod duration;
 mod list_value;

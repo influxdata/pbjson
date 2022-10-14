@@ -1,0 +1,12 @@
+[package]
+name = "code_gen"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[dependencies]
+clap = { version = "3", features = ["derive"] }
+prost-build = "0.11"
+pbjson-build = { path = "../../pbjson-build", version = "0.5" }
+tempfile = "3.3.0"

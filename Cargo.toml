@@ -4,4 +4,5 @@ members = [
   "pbjson-build",
   "pbjson-test",
   "pbjson-types",
+  "pbjson-types/code-gen",
 ]
