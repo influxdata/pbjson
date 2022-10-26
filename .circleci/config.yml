@@ -137,6 +137,9 @@ jobs:
       - run:
           name: Cargo test (use integers for enums)
           command: cargo test --workspace --features use-integers-for-enums
+      - run:
+          name: Cargo test (preserve proto field names)
+          command: cargo test --workspace --features preserve-proto-field-names
       - cache_save
 
 workflows:

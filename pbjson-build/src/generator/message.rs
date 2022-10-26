@@ -40,12 +40,20 @@ pub fn generate_message<W: Write>(
     ignore_unknown_fields: bool,
     btree_map_paths: &[String],
     emit_fields: bool,
+    preserve_proto_field_names: bool,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(&message.path);
 
     // Generate Serialize
     write_serialize_start(0, &rust_type, writer)?;
-    write_message_serialize(resolver, 2, message, writer, emit_fields)?;
+    write_message_serialize(
+        resolver,
+        2,
+        message,
+        writer,
+        emit_fields,
+        preserve_proto_field_names,
+    )?;
     write_serialize_end(0, writer)?;
 
     // Generate Deserialize
@@ -106,15 +114,23 @@ fn write_message_serialize<W: Write>(
     message: &Message,
     writer: &mut W,
     emit_fields: bool,
+    preserve_proto_field_names: bool,
 ) -> Result<()> {
     write_struct_serialize_start(indent, message, writer, emit_fields)?;
 
     for field in &message.fields {
-        write_serialize_field(resolver, indent, field, writer, emit_fields)?;
+        write_serialize_field(
+            resolver,
+            indent,
+            field,
+            writer,
+            emit_fields,
+            preserve_proto_field_names,
+        )?;
     }
 
     for one_of in &message.one_ofs {
-        write_serialize_one_of(indent, resolver, one_of, writer)?;
+        write_serialize_one_of(indent, resolver, one_of, writer, preserve_proto_field_names)?;
     }
 
     write_struct_serialize_end(indent, writer)
@@ -218,14 +234,21 @@ fn write_serialize_variable<W: Write>(
     field: &Field,
     variable: Variable<'_>,
     writer: &mut W,
+    preserve_proto_field_names: bool,
 ) -> Result<()> {
+    let json_name = field.json_name();
+    let field_name = if preserve_proto_field_names {
+        field.name.as_str()
+    } else {
+        json_name.as_str()
+    };
     match &field.field_type {
         FieldType::Scalar(scalar) => write_serialize_scalar_variable(
             indent,
             *scalar,
             field.field_modifier,
             variable,
-            field.json_name(),
+            field_name,
             writer,
         ),
         FieldType::Enum(path) => {
@@ -250,7 +273,7 @@ fn write_serialize_variable<W: Write>(
                 writer,
                 "{}struct_ser.serialize_field(\"{}\", &v)?;",
                 Indent(indent),
-                field.json_name()
+                field_name,
             )
         }
         FieldType::Map(_, value_type)
@@ -302,7 +325,7 @@ fn write_serialize_variable<W: Write>(
                 writer,
                 "{}struct_ser.serialize_field(\"{}\", &v)?;",
                 Indent(indent),
-                field.json_name()
+                field_name,
             )
         }
         _ => {
@@ -310,7 +333,7 @@ fn write_serialize_variable<W: Write>(
                 writer,
                 "{}struct_ser.serialize_field(\"{}\", {})?;",
                 Indent(indent),
-                field.json_name(),
+                field_name,
                 variable.as_ref
             )
         }
@@ -322,7 +345,7 @@ fn write_serialize_scalar_variable<W: Write>(
     scalar: ScalarType,
     field_modifier: FieldModifier,
     variable: Variable<'_>,
-    json_name: String,
+    field_name: &str,
     writer: &mut W,
 ) -> Result<()> {
     let conversion = match scalar {
@@ -333,7 +356,7 @@ fn write_serialize_scalar_variable<W: Write>(
                 writer,
                 "{}struct_ser.serialize_field(\"{}\", {})?;",
                 Indent(indent),
-                json_name,
+                field_name,
                 variable.as_ref
             )
         }
@@ -345,7 +368,7 @@ fn write_serialize_scalar_variable<W: Write>(
                 writer,
                 "{}struct_ser.serialize_field(\"{}\", &{}.iter().map({}).collect::<Vec<_>>())?;",
                 Indent(indent),
-                json_name,
+                field_name,
                 variable.raw,
                 conversion
             )
@@ -355,7 +378,7 @@ fn write_serialize_scalar_variable<W: Write>(
                 writer,
                 "{}struct_ser.serialize_field(\"{}\", {}(&{}).as_str())?;",
                 Indent(indent),
-                json_name,
+                field_name,
                 conversion,
                 variable.raw,
             )
@@ -369,6 +392,7 @@ fn write_serialize_field<W: Write>(
     field: &Field,
     writer: &mut W,
     emit_fields: bool,
+    preserve_proto_field_names: bool,
 ) -> Result<()> {
     let as_ref = format!("&self.{}", field.rust_field_name());
     let variable = Variable {
@@ -379,7 +403,14 @@ fn write_serialize_field<W: Write>(
 
     match &field.field_modifier {
         FieldModifier::Required => {
-            write_serialize_variable(resolver, indent, field, variable, writer)?;
+            write_serialize_variable(
+                resolver,
+                indent,
+                field,
+                variable,
+                writer,
+                preserve_proto_field_names,
+            )?;
         }
         FieldModifier::Optional => {
             writeln!(
@@ -393,14 +424,28 @@ fn write_serialize_field<W: Write>(
                 as_unref: "*v",
                 raw: "v",
             };
-            write_serialize_variable(resolver, indent + 1, field, variable, writer)?;
+            write_serialize_variable(
+                resolver,
+                indent + 1,
+                field,
+                variable,
+                writer,
+                preserve_proto_field_names,
+            )?;
             writeln!(writer, "{}}}", Indent(indent))?;
         }
         FieldModifier::Repeated | FieldModifier::UseDefault => {
             write!(writer, "{}if ", Indent(indent))?;
             write_field_empty_predicate(field, writer, emit_fields)?;
             writeln!(writer, " {{")?;
-            write_serialize_variable(resolver, indent + 1, field, variable, writer)?;
+            write_serialize_variable(
+                resolver,
+                indent + 1,
+                field,
+                variable,
+                writer,
+                preserve_proto_field_names,
+            )?;
             writeln!(writer, "{}}}", Indent(indent))?;
         }
     }
@@ -412,6 +457,7 @@ fn write_serialize_one_of<W: Write>(
     resolver: &Resolver<'_>,
     one_of: &OneOf,
     writer: &mut W,
+    preserve_proto_field_names: bool,
 ) -> Result<()> {
     writeln!(
         writer,
@@ -434,7 +480,14 @@ fn write_serialize_one_of<W: Write>(
             as_unref: "*v",
             raw: "v",
         };
-        write_serialize_variable(resolver, indent + 3, field, variable, writer)?;
+        write_serialize_variable(
+            resolver,
+            indent + 3,
+            field,
+            variable,
+            writer,
+            preserve_proto_field_names,
+        )?;
         writeln!(writer, "{}}}", Indent(indent + 2))?;
     }
 
