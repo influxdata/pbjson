@@ -8,6 +8,7 @@ license = "MIT"
 keywords = ["protobuf", "json", "serde"]
 categories = ["encoding"]
 repository = "https://github.com/influxdata/pbjson"
+exclude = ["protos/*"]
 
 [dependencies] # In alphabetical order
 bytes = "1.0"
