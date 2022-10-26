@@ -358,7 +358,7 @@ fn write_serialize_scalar_variable<W: Write>(
                 Indent(indent),
                 field_name,
                 variable.as_ref
-            )
+            );
         }
     };
 
@@ -611,9 +611,9 @@ fn write_deserialize_message<W: Write>(
                 writeln!(
                     writer,
                     "{indent}{field}: {field}__.ok_or_else(|| serde::de::Error::missing_field(\"{json_name}\"))?,",
-                    indent=Indent(indent + 3),
-                    field= field.rust_field_name(),
-                    json_name= field.json_name()
+                    indent = Indent(indent + 3),
+                    field = field.rust_field_name(),
+                    json_name = field.json_name()
                 )?;
             }
             FieldModifier::UseDefault | FieldModifier::Repeated => {
@@ -967,9 +967,13 @@ fn write_deserialize_field<W: Write>(
                 }
                 write!(writer, "{})", Indent(indent + 1))?;
             }
-            FieldType::Message(_) => {
-                write!(writer, "map.next_value()?")?;
-            }
+            FieldType::Message(_) => match field.field_modifier {
+                FieldModifier::Repeated => {
+                    // No explicit presence for repeated fields
+                    write!(writer, "Some(map.next_value()?)")?;
+                }
+                _ => write!(writer, "map.next_value()?")?,
+            },
         },
     }
     writeln!(writer, ";")?;
@@ -998,7 +1002,7 @@ fn write_encode_scalar_field<W: Write>(
                     write!(writer, "map.next_value()?")
                 }
                 _ => write!(writer, "Some(map.next_value()?)"),
-            }
+            };
         }
     };
 
