@@ -59,6 +59,10 @@ fn main() -> Result<()> {
         builder.use_integers_for_enums();
     }
 
+    if cfg!(feature = "preserve-proto-field-names") {
+        builder.preserve_proto_field_names();
+    }
+
     builder.build(&[".test"])?;
 
     Ok(())

@@ -107,6 +107,7 @@ pub struct Builder {
     btree_map_paths: Vec<String>,
     emit_fields: bool,
     use_integers_for_enums: bool,
+    preserve_proto_field_names: bool,
 }
 
 impl Builder {
@@ -188,6 +189,13 @@ impl Builder {
     // print integers instead of enum names.
     pub fn use_integers_for_enums(&mut self) -> &mut Self {
         self.use_integers_for_enums = true;
+        self
+    }
+
+    /// Output fields with their original names as defined in their proto schemas, instead of
+    /// lowerCamelCase
+    pub fn preserve_proto_field_names(&mut self) -> &mut Self {
+        self.preserve_proto_field_names = true;
         self
     }
 
@@ -279,6 +287,7 @@ impl Builder {
                             self.ignore_unknown_fields,
                             &self.btree_map_paths,
                             self.emit_fields,
+                            self.preserve_proto_field_names,
                         )?
                     }
                 }
