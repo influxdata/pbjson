@@ -358,7 +358,7 @@ fn write_serialize_scalar_variable<W: Write>(
                 Indent(indent),
                 field_name,
                 variable.as_ref
-            )
+            );
         }
     };
 
@@ -611,9 +611,9 @@ fn write_deserialize_message<W: Write>(
                 writeln!(
                     writer,
                     "{indent}{field}: {field}__.ok_or_else(|| serde::de::Error::missing_field(\"{json_name}\"))?,",
-                    indent=Indent(indent + 3),
-                    field= field.rust_field_name(),
-                    json_name= field.json_name()
+                    indent = Indent(indent + 3),
+                    field = field.rust_field_name(),
+                    json_name = field.json_name()
                 )?;
             }
             FieldModifier::UseDefault | FieldModifier::Repeated => {
@@ -829,117 +829,163 @@ fn write_deserialize_field<W: Write>(
         json_name
     )?;
     writeln!(writer, "{}}}", Indent(indent + 1))?;
-    write!(writer, "{}{}__ = Some(", Indent(indent + 1), field_name)?;
+    write!(writer, "{}{}__ = ", Indent(indent + 1), field_name)?;
 
-    if let Some(one_of) = one_of {
-        write!(
-            writer,
-            "{}::{}(",
-            resolver.rust_type(&one_of.path),
-            field.rust_type_name()
-        )?;
-    }
-
-    match &field.field_type {
-        FieldType::Scalar(scalar) => {
-            write_encode_scalar_field(indent + 1, *scalar, field.field_modifier, writer)?;
-        }
-        FieldType::Enum(path) => match field.field_modifier {
-            FieldModifier::Repeated => {
+    match one_of {
+        Some(one_of) => match &field.field_type {
+            FieldType::Scalar(s) => match override_deserializer(*s) {
+                Some(deserializer) => {
+                    write!(
+                        writer,
+                        "map.next_value::<::std::option::Option<{}>>()?.map(|x| {}::{}(x.0))",
+                        deserializer,
+                        resolver.rust_type(&one_of.path),
+                        field.rust_type_name()
+                    )?;
+                }
+                None => {
+                    write!(
+                        writer,
+                        "map.next_value::<::std::option::Option<_>>()?.map({}::{})",
+                        resolver.rust_type(&one_of.path),
+                        field.rust_type_name()
+                    )?;
+                }
+            },
+            FieldType::Enum(path) => {
                 write!(
                     writer,
-                    "map.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect()",
-                    resolver.rust_type(path)
+                    "map.next_value::<::std::option::Option<{}>>()?.map(|x| {}::{}(x as i32))",
+                    resolver.rust_type(path),
+                    resolver.rust_type(&one_of.path),
+                    field.rust_type_name()
                 )?;
             }
-            _ => {
-                write!(
-                    writer,
-                    "map.next_value::<{}>()? as i32",
-                    resolver.rust_type(path)
-                )?;
-            }
+            FieldType::Message(_) => writeln!(
+                writer,
+                "map.next_value::<::std::option::Option<_>>()?.map({}::{})",
+                resolver.rust_type(&one_of.path),
+                field.rust_type_name()
+            )?,
+            FieldType::Map(_, _) => unreachable!("one of cannot contain map fields"),
         },
-        FieldType::Map(key, value) => {
-            writeln!(writer)?;
-            match btree_map {
-                true => write!(
-                    writer,
-                    "{}map.next_value::<std::collections::BTreeMap<",
-                    Indent(indent + 2),
-                )?,
-                false => write!(
-                    writer,
-                    "{}map.next_value::<std::collections::HashMap<",
-                    Indent(indent + 2),
-                )?,
-            }
 
-            let map_k = match key {
-                ScalarType::Bytes | ScalarType::F32 | ScalarType::F64 => {
-                    panic!("protobuf disallows maps with floating point or bytes keys")
-                }
-                _ if key.is_numeric() => {
+        None => match &field.field_type {
+            FieldType::Scalar(scalar) => {
+                write_encode_scalar_field(indent + 1, *scalar, field.field_modifier, writer)?;
+            }
+            FieldType::Enum(path) => match field.field_modifier {
+                FieldModifier::Optional => {
                     write!(
                         writer,
-                        "::pbjson::private::NumberDeserialize<{}>",
-                        key.rust_type()
+                        "map.next_value::<::std::option::Option<{}>>()?.map(|x| x as i32)",
+                        resolver.rust_type(path)
                     )?;
-                    "k.0"
                 }
-                _ => {
-                    write!(writer, "_")?;
-                    "k"
-                }
-            };
-            write!(writer, ", ")?;
-            let map_v = match value.as_ref() {
-                FieldType::Scalar(scalar) if scalar.is_numeric() => {
+                FieldModifier::Repeated => {
                     write!(
                         writer,
-                        "::pbjson::private::NumberDeserialize<{}>",
-                        scalar.rust_type()
+                        "Some(map.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect())",
+                        resolver.rust_type(path)
                     )?;
-                    "v.0"
                 }
-                FieldType::Scalar(ScalarType::Bytes) => {
-                    write!(writer, "::pbjson::private::BytesDeserialize<_>",)?;
-                    "v.0"
-                }
-                FieldType::Enum(path) => {
-                    write!(writer, "{}", resolver.rust_type(path))?;
-                    "v as i32"
-                }
-                FieldType::Map(_, _) => panic!("protobuf disallows nested maps"),
                 _ => {
-                    write!(writer, "_")?;
-                    "v"
+                    write!(
+                        writer,
+                        "Some(map.next_value::<{}>()? as i32)",
+                        resolver.rust_type(path)
+                    )?;
                 }
-            };
+            },
+            FieldType::Map(key, value) => {
+                write!(writer, "Some(")?;
+                writeln!(writer)?;
+                match btree_map {
+                    true => write!(
+                        writer,
+                        "{}map.next_value::<std::collections::BTreeMap<",
+                        Indent(indent + 2),
+                    )?,
+                    false => write!(
+                        writer,
+                        "{}map.next_value::<std::collections::HashMap<",
+                        Indent(indent + 2),
+                    )?,
+                }
 
-            writeln!(writer, ">>()?")?;
-            if map_k != "k" || map_v != "v" {
-                writeln!(
-                    writer,
-                    "{}.into_iter().map(|(k,v)| ({}, {})).collect()",
-                    Indent(indent + 3),
-                    map_k,
-                    map_v,
-                )?;
+                let map_k = match key {
+                    ScalarType::Bytes | ScalarType::F32 | ScalarType::F64 => {
+                        panic!("protobuf disallows maps with floating point or bytes keys")
+                    }
+                    _ if key.is_numeric() => {
+                        write!(
+                            writer,
+                            "::pbjson::private::NumberDeserialize<{}>",
+                            key.rust_type()
+                        )?;
+                        "k.0"
+                    }
+                    _ => {
+                        write!(writer, "_")?;
+                        "k"
+                    }
+                };
+                write!(writer, ", ")?;
+                let map_v = match value.as_ref() {
+                    FieldType::Scalar(scalar) if scalar.is_numeric() => {
+                        write!(
+                            writer,
+                            "::pbjson::private::NumberDeserialize<{}>",
+                            scalar.rust_type()
+                        )?;
+                        "v.0"
+                    }
+                    FieldType::Scalar(ScalarType::Bytes) => {
+                        write!(writer, "::pbjson::private::BytesDeserialize<_>",)?;
+                        "v.0"
+                    }
+                    FieldType::Enum(path) => {
+                        write!(writer, "{}", resolver.rust_type(path))?;
+                        "v as i32"
+                    }
+                    FieldType::Map(_, _) => panic!("protobuf disallows nested maps"),
+                    _ => {
+                        write!(writer, "_")?;
+                        "v"
+                    }
+                };
+
+                writeln!(writer, ">>()?")?;
+                if map_k != "k" || map_v != "v" {
+                    writeln!(
+                        writer,
+                        "{}.into_iter().map(|(k,v)| ({}, {})).collect()",
+                        Indent(indent + 3),
+                        map_k,
+                        map_v,
+                    )?;
+                }
+                write!(writer, "{})", Indent(indent + 1))?;
             }
-            write!(writer, "{}", Indent(indent + 1))?;
-        }
-        _ => {
-            write!(writer, "map.next_value()?",)?;
-        }
-    };
-
-    if one_of.is_some() {
-        write!(writer, ")")?;
+            FieldType::Message(_) => match field.field_modifier {
+                FieldModifier::Repeated => {
+                    // No explicit presence for repeated fields
+                    write!(writer, "Some(map.next_value()?)")?;
+                }
+                _ => write!(writer, "map.next_value()?")?,
+            },
+        },
     }
-
-    writeln!(writer, ");")?;
+    writeln!(writer, ";")?;
     writeln!(writer, "{}}}", Indent(indent))
+}
+
+fn override_deserializer(scalar: ScalarType) -> Option<&'static str> {
+    match scalar {
+        ScalarType::Bytes => Some("::pbjson::private::BytesDeserialize<_>"),
+        _ if scalar.is_numeric() => Some("::pbjson::private::NumberDeserialize<_>"),
+        _ => None,
+    }
 }
 
 fn write_encode_scalar_field<W: Write>(
@@ -948,32 +994,46 @@ fn write_encode_scalar_field<W: Write>(
     field_modifier: FieldModifier,
     writer: &mut W,
 ) -> Result<()> {
-    let deserializer = match scalar {
-        ScalarType::Bytes => "BytesDeserialize",
-        _ if scalar.is_numeric() => "NumberDeserialize",
-        _ => return write!(writer, "map.next_value()?",),
+    let deserializer = match override_deserializer(scalar) {
+        Some(deserializer) => deserializer,
+        None => {
+            return match field_modifier {
+                FieldModifier::Optional => {
+                    write!(writer, "map.next_value()?")
+                }
+                _ => write!(writer, "Some(map.next_value()?)"),
+            };
+        }
     };
 
     writeln!(writer)?;
 
     match field_modifier {
+        FieldModifier::Optional => {
+            writeln!(
+                writer,
+                "{}map.next_value::<::std::option::Option<{}>>()?.map(|x| x.0)",
+                Indent(indent + 1),
+                deserializer
+            )?;
+        }
         FieldModifier::Repeated => {
             writeln!(
                 writer,
-                "{}map.next_value::<Vec<::pbjson::private::{}<_>>>()?",
+                "{}Some(map.next_value::<Vec<{}>>()?",
                 Indent(indent + 1),
                 deserializer
             )?;
             writeln!(
                 writer,
-                "{}.into_iter().map(|x| x.0).collect()",
+                "{}.into_iter().map(|x| x.0).collect())",
                 Indent(indent + 2)
             )?;
         }
         _ => {
             writeln!(
                 writer,
-                "{}map.next_value::<::pbjson::private::{}<_>>()?.0",
+                "{}Some(map.next_value::<{}>()?.0)",
                 Indent(indent + 1),
                 deserializer
             )?;

@@ -108,4 +108,7 @@ message KitchenSink {
   google.protobuf.StringValue string_value = 54;
   google.protobuf.UInt32Value uint32_value = 55;
   google.protobuf.UInt64Value uint64_value = 56;
+
+  repeated google.protobuf.Int32Value repeated_int32_value = 57;
+  map<string, google.protobuf.Int32Value> map_int32_value = 58;
 }

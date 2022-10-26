@@ -28,14 +28,17 @@ pub mod test {
         include!(concat!(env!("OUT_DIR"), "/test.syntax3.rs"));
         include!(concat!(env!("OUT_DIR"), "/test.syntax3.serde.rs"));
     }
+
     pub mod common {
         include!(concat!(env!("OUT_DIR"), "/test.common.rs"));
         include!(concat!(env!("OUT_DIR"), "/test.common.serde.rs"));
     }
+
     pub mod duplicate_name {
         include!(concat!(env!("OUT_DIR"), "/test.duplicate_name.rs"));
         include!(concat!(env!("OUT_DIR"), "/test.duplicate_name.serde.rs"));
     }
+
     pub mod escape {
         include!(concat!(
             env!("OUT_DIR"),
@@ -80,6 +83,7 @@ mod tests {
             }
         }
     }
+
     impl From<(&'static str, &'static str)> for EncodedStrings {
         fn from((expected, expected_preserved_proto): (&'static str, &'static str)) -> Self {
             EncodedStrings {
@@ -130,6 +134,14 @@ mod tests {
                 &serde_json::from_reader(expected_preserved_proto.as_bytes()).unwrap()
             );
         }
+    }
+
+    fn verify_decode_err(encoded: &str, error: &str) {
+        let err = serde_json::from_str::<KitchenSink>(encoded)
+            .unwrap_err()
+            .to_string();
+
+        assert!(err.contains(error), "{}", err);
     }
 
     fn verify(decoded: &KitchenSink, expected: impl Into<EncodedStrings>) {
@@ -662,6 +674,77 @@ mod tests {
 
         decoded.string_value = None;
         verify(&decoded, r#"{}"#);
+
+        // Test explicit null optional scalar
+        verify_decode(&decoded, r#"{"optionalU32":null}"#);
+        verify_decode(&decoded, r#"{"optionalU64":null}"#);
+        verify_decode(&decoded, r#"{"optionalString":null}"#);
+
+        // Test explicit null optional enum
+        verify_decode(&decoded, r#"{"optionalValue":null}"#);
+
+        // Test explicit null message
+        verify_decode(&decoded, r#"{"empty":null}"#);
+
+        // Test explicit null in oneof
+        verify_decode(&decoded, r#"{"oneOfI32":null}"#);
+        verify_decode(&decoded, r#"{"oneOfBool":null}"#);
+        verify_decode(&decoded, r#"{"oneOfValue":null}"#);
+        verify_decode(&decoded, r#"{"oneOfMessage":null}"#);
+
+        // Test explicit null value type
+        verify_decode(&decoded, r#"{"boolValue":null}"#);
+        verify_decode(&decoded, r#"{"bytesValue":null}"#);
+        verify_decode(&decoded, r#"{"doubleValue":null}"#);
+        verify_decode(&decoded, r#"{"floatValue":null}"#);
+        verify_decode(&decoded, r#"{"int32Value":null}"#);
+        verify_decode(&decoded, r#"{"int64Value":null}"#);
+        verify_decode(&decoded, r#"{"stringValue":null}"#);
+        verify_decode(&decoded, r#"{"uint32Value":null}"#);
+        verify_decode(&decoded, r#"{"uint64Value":null}"#);
+
+        // Test primitives are not nullable
+        verify_decode_err(r#"{"i32":null}"#, "data did not match any variant");
+        verify_decode_err(r#"{"u64":null}"#, "data did not match any variant");
+        verify_decode_err(r#"{"value":null}"#, "invalid type: null");
+        verify_decode_err(r#"{"bool":null}"#, "invalid type: null");
+        verify_decode_err(r#"{"string":null}"#, "invalid type: null");
+
+        // Test lists are not nullable
+        verify_decode_err(
+            r#"{"repeatedI32":null}"#,
+            "invalid type: null, expected a sequence",
+        );
+        verify_decode_err(
+            r#"{"repeatedI32":[null]}"#,
+            "data did not match any variant",
+        );
+        verify_decode_err(
+            r#"{"repeatedInt32Value":null}"#,
+            "invalid type: null, expected a sequence",
+        );
+        verify_decode_err(
+            r#"{"repeatedInt32Value":[null]}"#,
+            "data did not match any variant",
+        );
+
+        // Test maps are not nullable
+        verify_decode_err(
+            r#"{"stringDict":null}"#,
+            "invalid type: null, expected a map",
+        );
+        verify_decode_err(
+            r#"{"stringDict": {"foo": null}}"#,
+            "invalid type: null, expected a string ",
+        );
+        verify_decode_err(
+            r#"{"mapInt32Value":null}"#,
+            "invalid type: null, expected a map",
+        );
+        verify_decode_err(
+            r#"{"mapInt32Value":{"foo": null}}"#,
+            "data did not match any variant",
+        );
     }
 
     #[test]
