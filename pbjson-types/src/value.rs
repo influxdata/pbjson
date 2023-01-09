@@ -152,7 +152,7 @@ impl<'de> serde::de::Visitor<'de> for KindVisitor {
     where
         E: de::Error,
     {
-        if v > -(1 << 53) && v < 1 << 53 {
+        if v > -(1 << f64::MANTISSA_DIGITS) && v < 1 << f64::MANTISSA_DIGITS {
             return Ok(Kind::NumberValue(v as f64));
         }
 
@@ -193,7 +193,7 @@ impl<'de> serde::de::Visitor<'de> for KindVisitor {
     where
         E: de::Error,
     {
-        if v < 1 << 53 {
+        if v < 1 << f64::MANTISSA_DIGITS {
             return Ok(Kind::NumberValue(v as f64));
         }
 
