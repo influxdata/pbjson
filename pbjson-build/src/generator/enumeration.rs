@@ -11,6 +11,7 @@ use super::{
 use crate::descriptor::{EnumDescriptor, TypePath};
 use crate::generator::write_fields_array;
 use crate::resolver::Resolver;
+use std::collections::HashMap;
 use std::io::{Result, Write};
 
 pub fn generate_enum<W: Write>(
@@ -22,19 +23,25 @@ pub fn generate_enum<W: Write>(
 ) -> Result<()> {
     let rust_type = resolver.rust_type(path);
 
+    let mut rust_variants = HashMap::new();
     let variants: Vec<_> = descriptor
         .values
         .iter()
         .map(|variant| {
             let variant_name = variant.name.clone().unwrap();
             let variant_number = variant.number();
-            let rust_variant = resolver.rust_variant(path, &variant_name);
-            (variant_name, variant_number, rust_variant)
+            let rust_variant = rust_variants
+                .entry(variant_number)
+                .or_insert_with(|| resolver.rust_variant(path, &variant_name));
+            (variant_name, variant_number, rust_variant.clone())
         })
         .collect();
 
     // Generate Serialize
     write_serialize_start(0, &rust_type, writer)?;
+    // There will be duplicates in the presense of aliases. Let rustc deal with
+    // this.
+    writeln!(writer, "{}#[allow(unreachable_patterns)]", Indent(2))?;
     if use_integers_for_enums {
         writeln!(writer, "{}let variant = match self {{", Indent(2))?;
         for (_, variant_number, rust_variant) in &variants {

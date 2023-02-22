@@ -49,6 +49,11 @@ pub mod test {
             "/test.r#abstract.r#type.escape.serde.rs"
         ));
     }
+
+    pub mod enum_alias {
+        include!(concat!(env!("OUT_DIR"), "/test.enum_alias.rs"));
+        include!(concat!(env!("OUT_DIR"), "/test.enum_alias.serde.rs"));
+    }
 }
 
 #[cfg(test)]

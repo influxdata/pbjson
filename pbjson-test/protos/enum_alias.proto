@@ -1,0 +1,12 @@
+syntax = "proto3";
+package test.enum_alias;
+
+enum Enum {
+    option allow_alias = true;
+    VALUE = 0;
+    OTHER = 1;
+    TWO = 2;
+    DOS = 2;
+    value = 0;
+    alias = 0;
+}
