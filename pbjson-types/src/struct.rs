@@ -1,7 +1,17 @@
 use crate::Struct;
 
+use alloc::string::String;
+
+#[cfg(feature = "std")]
 impl From<std::collections::HashMap<String, crate::Value>> for Struct {
     fn from(fields: std::collections::HashMap<String, crate::Value>) -> Self {
+        Self { fields }
+    }
+}
+
+#[cfg(not(feature = "std"))]
+impl From<alloc::collections::BTreeMap<String, crate::Value>> for Struct {
+    fn from(fields: alloc::collections::BTreeMap<String, crate::Value>) -> Self {
         Self { fields }
     }
 }
@@ -40,7 +50,7 @@ struct StructVisitor;
 impl<'de> serde::de::Visitor<'de> for StructVisitor {
     type Value = Struct;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         formatter.write_str("google.protobuf.Struct")
     }
 
@@ -48,7 +58,11 @@ impl<'de> serde::de::Visitor<'de> for StructVisitor {
     where
         A: serde::de::MapAccess<'de>,
     {
+        #[cfg(feature = "std")]
         let mut map = std::collections::HashMap::new();
+
+        #[cfg(not(feature = "std"))]
+        let mut map = alloc::collections::BTreeMap::new();
 
         while let Some((key, value)) = map_access.next_entry()? {
             map.insert(key, value);
@@ -60,6 +74,8 @@ impl<'de> serde::de::Visitor<'de> for StructVisitor {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn it_works() {
         let map: crate::Struct = std::collections::HashMap::from([

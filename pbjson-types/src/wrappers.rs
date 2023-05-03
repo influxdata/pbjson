@@ -1,5 +1,8 @@
 use prost::bytes::Bytes;
 
+use alloc::string::String;
+use alloc::string::ToString;
+
 macro_rules! ser_scalar_value {
     ($typ: ty) => {
         impl serde::Serialize for $typ {

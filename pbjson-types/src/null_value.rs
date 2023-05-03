@@ -29,7 +29,7 @@ struct NullValueVisitor;
 impl<'de> serde::de::Visitor<'de> for NullValueVisitor {
     type Value = NullValue;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         formatter.write_str("google.protobuf.NullValue")
     }
 

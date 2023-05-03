@@ -2,8 +2,11 @@ use crate::Duration;
 use serde::de::Visitor;
 use serde::Serialize;
 
-impl TryFrom<Duration> for std::time::Duration {
-    type Error = std::num::TryFromIntError;
+use alloc::format;
+use alloc::string::ToString;
+
+impl TryFrom<Duration> for core::time::Duration {
+    type Error = core::num::TryFromIntError;
 
     fn try_from(value: Duration) -> Result<Self, Self::Error> {
         Ok(Self::new(
@@ -13,8 +16,8 @@ impl TryFrom<Duration> for std::time::Duration {
     }
 }
 
-impl From<std::time::Duration> for Duration {
-    fn from(value: std::time::Duration) -> Self {
+impl From<core::time::Duration> for Duration {
+    fn from(value: core::time::Duration) -> Self {
         Self {
             seconds: value.as_secs() as _,
             nanos: value.subsec_nanos() as _,
@@ -61,7 +64,7 @@ struct DurationVisitor;
 impl<'de> Visitor<'de> for DurationVisitor {
     type Value = Duration;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         formatter.write_str("a duration string")
     }
 

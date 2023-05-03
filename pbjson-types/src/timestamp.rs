@@ -4,7 +4,7 @@ use serde::de::Visitor;
 use serde::Serialize;
 
 impl TryFrom<Timestamp> for chrono::DateTime<Utc> {
-    type Error = std::num::TryFromIntError;
+    type Error = core::num::TryFromIntError;
     fn try_from(value: Timestamp) -> Result<Self, Self::Error> {
         let Timestamp { seconds, nanos } = value;
 
@@ -37,7 +37,7 @@ struct TimestampVisitor;
 impl<'de> Visitor<'de> for TimestampVisitor {
     type Value = Timestamp;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         formatter.write_str("a date string")
     }
 

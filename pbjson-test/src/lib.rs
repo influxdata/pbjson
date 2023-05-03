@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+extern crate alloc;
+
 /// A test of an externally defined message
 #[derive(Clone, PartialEq, ::prost::Message, Serialize, Deserialize)]
 pub struct ExternMessage {}

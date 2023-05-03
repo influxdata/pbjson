@@ -39,7 +39,7 @@ fn write_serialize_start<W: Write>(indent: usize, rust_type: &str, writer: &mut 
         writer,
         r#"{indent}impl serde::Serialize for {rust_type} {{
 {indent}    #[allow(deprecated)]
-{indent}    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+{indent}    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
 {indent}    where
 {indent}        S: serde::Serializer,
 {indent}    {{"#,
@@ -62,7 +62,7 @@ fn write_deserialize_start<W: Write>(indent: usize, rust_type: &str, writer: &mu
         writer,
         r#"{indent}impl<'de> serde::Deserialize<'de> for {rust_type} {{
 {indent}    #[allow(deprecated)]
-{indent}    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+{indent}    fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
 {indent}    where
 {indent}        D: serde::Deserializer<'de>,
 {indent}    {{"#,

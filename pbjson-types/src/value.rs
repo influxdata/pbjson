@@ -1,5 +1,8 @@
 pub use crate::pb::google::protobuf::value::Kind;
 
+use alloc::string::String;
+use alloc::vec::Vec;
+
 use serde::{
     de::{self, MapAccess, SeqAccess},
     ser, Deserialize, Deserializer, Serialize, Serializer,
@@ -30,7 +33,6 @@ from! {
         crate::ListValue => Kind::from(value).into(),
         crate::Struct => Kind::from(value).into(),
         f64 => Kind::from(value).into(),
-        std::collections::HashMap<String, Self> => Kind::from(value).into(),
     }
 
     Kind[value] => {
@@ -42,7 +44,28 @@ from! {
         crate::ListValue => Self::ListValue(value),
         crate::Struct => Self::StructValue(value),
         f64 => Self::NumberValue(value),
+    }
+}
+
+#[cfg(feature = "std")]
+from! {
+    crate::Value[value] => {
+        std::collections::HashMap<String, Self> => Kind::from(value).into(),
+    }
+
+    Kind[value] => {
         std::collections::HashMap<String, crate::Value> => Self::StructValue(value.into()),
+    }
+}
+
+#[cfg(not(feature = "std"))]
+from! {
+    crate::Value[value] => {
+        alloc::collections::BTreeMap<String, Self> => Kind::from(value).into(),
+    }
+
+    Kind[value] => {
+        alloc::collections::BTreeMap<String, crate::Value> => Self::StructValue(value.into()),
     }
 }
 
@@ -116,7 +139,7 @@ struct KindVisitor;
 impl<'de> serde::de::Visitor<'de> for KindVisitor {
     type Value = Kind;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         formatter.write_str("google.protobuf.Value")
     }
 
@@ -277,7 +300,11 @@ impl<'de> serde::de::Visitor<'de> for KindVisitor {
     where
         A: MapAccess<'de>,
     {
+        #[cfg(feature = "std")]
         let mut map = std::collections::HashMap::new();
+
+        #[cfg(not(feature = "std"))]
+        let mut map = alloc::collections::BTreeMap::new();
 
         while let Some((key, value)) = map_access.next_entry()? {
             map.insert(key, value);
