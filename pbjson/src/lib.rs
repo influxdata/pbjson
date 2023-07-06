@@ -9,7 +9,7 @@
 //! [3]: https://docs.rs/pbjson-build
 //!
 #![no_std]
-#![deny(rustdoc::broken_intra_doc_links, rustdoc::bare_urls, rust_2018_idioms)]
+#![deny(rustdoc::broken_intra_doc_links, rustdoc::bare_urls)]
 #![warn(
     missing_debug_implementations,
     clippy::explicit_iter_loop,
@@ -18,10 +18,11 @@
     clippy::future_not_send
 )]
 
-extern crate alloc;
-
 #[doc(hidden)]
 pub mod private {
+    extern crate alloc;
+    extern crate core;
+
     /// Re-export base64
     pub use base64;
 
