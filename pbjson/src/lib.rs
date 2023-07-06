@@ -18,13 +18,7 @@
     clippy::future_not_send
 )]
 
-#[cfg(not(feature = "std"))]
-pub mod private {
-    pub use base64;
-}
-
 #[doc(hidden)]
-#[cfg(feature = "std")]
 pub mod private {
     extern crate alloc;
     extern crate core;
@@ -52,7 +46,7 @@ pub mod private {
     impl<'de, T> serde::Deserialize<'de> for NumberDeserialize<T>
     where
         T: FromStr + serde::Deserialize<'de>,
-        <T as FromStr>::Err: std::error::Error,
+        <T as FromStr>::Err: core::fmt::Debug,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
@@ -60,7 +54,7 @@ pub mod private {
         {
             let content = Content::deserialize(deserializer)?;
             Ok(Self(match content {
-                Content::Str(v) => v.parse().map_err(serde::de::Error::custom)?,
+                Content::Str(v) => v.parse().map_err(|_| D::Error::custom("parse error"))?,
                 Content::Number(v) => v,
             }))
         }
@@ -92,7 +86,7 @@ pub mod private {
                     }
                     _ => Err(e),
                 })
-                .map_err(serde::de::Error::custom)?;
+                .map_err(|_| D::Error::custom("parse error"))?;
             Ok(decoded)
         }
     }
@@ -100,7 +94,6 @@ pub mod private {
     #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Hash, Ord, Eq)]
     pub struct BytesDeserialize<T>(pub T);
 
-    #[cfg(feature = "std")]
     impl<'de, T> Deserialize<'de> for BytesDeserialize<T>
     where
         T: From<Vec<u8>>,
