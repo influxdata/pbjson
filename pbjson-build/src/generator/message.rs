@@ -208,12 +208,23 @@ fn write_decode_variant<W: Write>(
     writer: &mut W,
 ) -> Result<()> {
     writeln!(writer, "{}::from_i32({})", resolver.rust_type(path), value)?;
-    write!(
-        writer,
-        "{}.ok_or_else(|| serde::ser::Error::custom(format!(\"Invalid variant {{}}\", {})))",
-        Indent(indent),
-        value
-    )
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "no_std_serde")] {
+            write!(
+                writer,
+                "{}.ok_or_else(|| serde::ser::Error::custom(::prost::alloc::format!(\"Invalid variant {{}}\", {})))",
+                Indent(indent),
+                value
+            )
+        } else {
+            write!(
+                writer,
+                "{}.ok_or_else(|| serde::ser::Error::custom(format!(\"Invalid variant {{}}\", {})))",
+                Indent(indent),
+                value
+            )
+        }
+    }
 }
 
 /// Depending on the type of the field different ways of accessing field's value
@@ -259,11 +270,21 @@ fn write_serialize_variable<W: Write>(
                     write!(writer, "{}", Indent(indent + 1))?;
                     write_decode_variant(resolver, indent + 2, "v", path, writer)?;
                     writeln!(writer)?;
-                    write!(
-                        writer,
-                        "{}}}).collect::<Result<Vec<_>, _>>()",
-                        Indent(indent + 1)
-                    )
+                    cfg_if::cfg_if! {
+                        if #[cfg(feature = "no_std_serde")] {
+                            write!(
+                                writer,
+                                "{}}}).collect::<Result<::prost::alloc::vec::Vec<_>, _>>()",
+                                Indent(indent + 1)
+                            )
+                        } else {
+                            write!(
+                                writer,
+                                "{}}}).collect::<Result<Vec<_>, _>>()",
+                                Indent(indent + 1)
+                            )
+                        }
+                    }
                 }
                 _ => write_decode_variant(resolver, indent + 1, variable.as_unref, path, writer),
             }?;
@@ -285,12 +306,23 @@ fn write_serialize_variable<W: Write>(
                     | FieldType::Enum(_)
             ) =>
         {
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "no_std_serde")] {
             writeln!(
                 writer,
-                "{}let v: std::collections::HashMap<_, _> = {}.iter()",
+                "{}let v: ::prost::alloc::collections::BTreeMap<_, _> = {}.iter()",
                 Indent(indent),
                 variable.raw
             )?;
+                } else {
+                    writeln!(
+                        writer,
+                        "{}let v: std::collections::HashMap<_, _> = {}.iter()",
+                        Indent(indent),
+                        variable.raw
+                    )?;
+                }
+            }
 
             match value_type.as_ref() {
                 FieldType::Scalar(ScalarType::I64) | FieldType::Scalar(ScalarType::U64) => {
@@ -364,14 +396,27 @@ fn write_serialize_scalar_variable<W: Write>(
 
     match field_modifier {
         FieldModifier::Repeated => {
-            writeln!(
-                writer,
-                "{}struct_ser.serialize_field(\"{}\", &{}.iter().map({}).collect::<Vec<_>>())?;",
-                Indent(indent),
-                field_name,
-                variable.raw,
-                conversion
-            )
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "no_std_serde")] {
+                    writeln!(
+                        writer,
+                        "{}struct_ser.serialize_field(\"{}\", &{}.iter().map({}).collect::<::prost::alloc::vec::Vec<_>>())?;",
+                        Indent(indent),
+                        field_name,
+                        variable.raw,
+                        conversion
+                    )
+                } else {
+                    writeln!(
+                        writer,
+                        "{}struct_ser.serialize_field(\"{}\", &{}.iter().map({}).collect::<Vec<_>>())?;",
+                        Indent(indent),
+                        field_name,
+                        variable.raw,
+                        conversion
+                    )
+                }
+            }
         }
         _ => {
             writeln!(
@@ -508,23 +553,45 @@ fn write_deserialize_message<W: Write>(
 
     writeln!(writer, "{}struct GeneratedVisitor;", Indent(indent))?;
 
-    writeln!(
-        writer,
-        r#"{indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
-{indent}    type Value = {rust_type};
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "no_std_serde")] {
+            writeln!(
+                writer,
+                r#"{indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+        {indent}    type Value = {rust_type};
 
-{indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
-{indent}        formatter.write_str("struct {name}")
-{indent}    }}
+        {indent}    fn expecting(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {{
+        {indent}        formatter.write_str("struct {name}")
+        {indent}    }}
 
-{indent}    fn visit_map<V>(self, mut map: V) -> std::result::Result<{rust_type}, V::Error>
-{indent}        where
-{indent}            V: serde::de::MapAccess<'de>,
-{indent}    {{"#,
-        indent = Indent(indent),
-        name = message.path,
-        rust_type = rust_type,
-    )?;
+        {indent}    fn visit_map<V>(self, mut map: V) -> ::core::result::Result<{rust_type}, V::Error>
+        {indent}        where
+        {indent}            V: serde::de::MapAccess<'de>,
+        {indent}    {{"#,
+                indent = Indent(indent),
+                name = message.path,
+                rust_type = rust_type,
+            )?;
+        } else {
+            writeln!(
+                writer,
+                r#"{indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+        {indent}    type Value = {rust_type};
+
+        {indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+        {indent}        formatter.write_str("struct {name}")
+        {indent}    }}
+
+        {indent}    fn visit_map<V>(self, mut map: V) -> std::result::Result<{rust_type}, V::Error>
+        {indent}        where
+        {indent}            V: serde::de::MapAccess<'de>,
+        {indent}    {{"#,
+                indent = Indent(indent),
+                name = message.path,
+                rust_type = rust_type,
+            )?;
+        }
+    }
 
     for field in &message.fields {
         writeln!(
@@ -686,29 +753,57 @@ fn write_deserialize_field_name<W: Write>(
         ignore_unknown_fields,
     )?;
 
-    writeln!(
-        writer,
-        r#"{indent}impl<'de> serde::Deserialize<'de> for GeneratedField {{
-{indent}    fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-{indent}    where
-{indent}        D: serde::Deserializer<'de>,
-{indent}    {{
-{indent}        struct GeneratedVisitor;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "no_std_serde")] {
+            writeln!(
+                writer,
+                r#"{indent}impl<'de> serde::Deserialize<'de> for GeneratedField {{
+        {indent}    fn deserialize<D>(deserializer: D) -> ::core::result::Result<GeneratedField, D::Error>
+        {indent}    where
+        {indent}        D: serde::Deserializer<'de>,
+        {indent}    {{
+        {indent}        struct GeneratedVisitor;
 
-{indent}        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
-{indent}            type Value = GeneratedField;
+        {indent}        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+        {indent}            type Value = GeneratedField;
 
-{indent}            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
-{indent}                write!(formatter, "expected one of: {{:?}}", &FIELDS)
-{indent}            }}
+        {indent}            fn expecting(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {{
+        {indent}                write!(formatter, "expected one of: {{:?}}", &FIELDS)
+        {indent}            }}
 
-{indent}            #[allow(unused_variables)]
-{indent}            fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-{indent}            where
-{indent}                E: serde::de::Error,
-{indent}            {{"#,
-        indent = Indent(indent)
-    )?;
+        {indent}            #[allow(unused_variables)]
+        {indent}            fn visit_str<E>(self, value: &str) -> ::core::result::Result<GeneratedField, E>
+        {indent}            where
+        {indent}                E: serde::de::Error,
+        {indent}            {{"#,
+                indent = Indent(indent)
+            )?;
+        } else {
+            writeln!(
+                writer,
+                r#"{indent}impl<'de> serde::Deserialize<'de> for GeneratedField {{
+        {indent}    fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+        {indent}    where
+        {indent}        D: serde::Deserializer<'de>,
+        {indent}    {{
+        {indent}        struct GeneratedVisitor;
+
+        {indent}        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+        {indent}            type Value = GeneratedField;
+
+        {indent}            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+        {indent}                write!(formatter, "expected one of: {{:?}}", &FIELDS)
+        {indent}            }}
+
+        {indent}            #[allow(unused_variables)]
+        {indent}            fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+        {indent}            where
+        {indent}                E: serde::de::Error,
+        {indent}            {{"#,
+                indent = Indent(indent)
+            )?;
+        }
+    }
 
     if !fields.is_empty() {
         writeln!(writer, "{}match value {{", Indent(indent + 4))?;
@@ -835,38 +930,86 @@ fn write_deserialize_field<W: Write>(
         Some(one_of) => match &field.field_type {
             FieldType::Scalar(s) => match override_deserializer(*s) {
                 Some(deserializer) => {
-                    write!(
-                        writer,
-                        "map.next_value::<::std::option::Option<{}>>()?.map(|x| {}::{}(x.0))",
-                        deserializer,
-                        resolver.rust_type(&one_of.path),
-                        field.rust_type_name()
-                    )?;
+                    cfg_if::cfg_if! {
+                        if #[cfg(feature = "no_std_serde")] {
+                            write!(
+                                writer,
+                                "map.next_value::<::core::option::Option<{}>>()?.map(|x| {}::{}(x.0))",
+                                deserializer,
+                                resolver.rust_type(&one_of.path),
+                                field.rust_type_name()
+                            )?;
+                        } else {
+                            write!(
+                                writer,
+                                "map.next_value::<std::option::Option<{}>>()?.map(|x| {}::{}(x.0))",
+                                deserializer,
+                                resolver.rust_type(&one_of.path),
+                                field.rust_type_name()
+                            )?;
+                        }
+                    }
                 }
                 None => {
-                    write!(
-                        writer,
-                        "map.next_value::<::std::option::Option<_>>()?.map({}::{})",
-                        resolver.rust_type(&one_of.path),
-                        field.rust_type_name()
-                    )?;
+                    cfg_if::cfg_if! {
+                        if #[cfg(feature = "no_std_serde")] {
+                            write!(
+                                writer,
+                                "map.next_value::<::core::option::Option<_>>()?.map({}::{})",
+                                resolver.rust_type(&one_of.path),
+                                field.rust_type_name()
+                            )?;
+                        } else {
+                            write!(
+                                writer,
+                                "map.next_value::<std::option::Option<_>>()?.map({}::{})",
+                                resolver.rust_type(&one_of.path),
+                                field.rust_type_name()
+                            )?;
+                        }
+                    }
                 }
             },
             FieldType::Enum(path) => {
-                write!(
-                    writer,
-                    "map.next_value::<::std::option::Option<{}>>()?.map(|x| {}::{}(x as i32))",
-                    resolver.rust_type(path),
-                    resolver.rust_type(&one_of.path),
-                    field.rust_type_name()
-                )?;
+                cfg_if::cfg_if! {
+                    if #[cfg(feature = "no_std_serde")] {
+                        write!(
+                            writer,
+                            "map.next_value::<::core::option::Option<{}>>()?.map(|x| {}::{}(x as i32))",
+                            resolver.rust_type(path),
+                            resolver.rust_type(&one_of.path),
+                            field.rust_type_name()
+                        )?;
+                    } else {
+                        write!(
+                            writer,
+                            "map.next_value::<std::option::Option<{}>>()?.map(|x| {}::{}(x as i32))",
+                            resolver.rust_type(path),
+                            resolver.rust_type(&one_of.path),
+                            field.rust_type_name()
+                        )?;
+                    }
+                }
             }
-            FieldType::Message(_) => writeln!(
-                writer,
-                "map.next_value::<::std::option::Option<_>>()?.map({}::{})",
-                resolver.rust_type(&one_of.path),
-                field.rust_type_name()
-            )?,
+            FieldType::Message(_) => {
+                cfg_if::cfg_if! {
+                    if #[cfg(feature = "no_std_serde")] {
+                        writeln!(
+                            writer,
+                            "map.next_value::<::core::option::Option<_>>()?.map({}::{})",
+                            resolver.rust_type(&one_of.path),
+                            field.rust_type_name()
+                        )?
+                    } else {
+                        writeln!(
+                            writer,
+                            "map.next_value::<std::option::Option<_>>()?.map({}::{})",
+                            resolver.rust_type(&one_of.path),
+                            field.rust_type_name()
+                        )?
+                    }
+                }
+            }
             FieldType::Map(_, _) => unreachable!("one of cannot contain map fields"),
         },
 
@@ -876,18 +1019,38 @@ fn write_deserialize_field<W: Write>(
             }
             FieldType::Enum(path) => match field.field_modifier {
                 FieldModifier::Optional => {
-                    write!(
-                        writer,
-                        "map.next_value::<::std::option::Option<{}>>()?.map(|x| x as i32)",
-                        resolver.rust_type(path)
-                    )?;
+                    cfg_if::cfg_if! {
+                        if #[cfg(feature = "no_std_serde")] {
+                            write!(
+                                writer,
+                                "map.next_value::<::core::option::Option<{}>>()?.map(|x| x as i32)",
+                                resolver.rust_type(path)
+                            )?;
+                        } else {
+                            write!(
+                                writer,
+                                "map.next_value::<std::option::Option<{}>>()?.map(|x| x as i32)",
+                                resolver.rust_type(path)
+                            )?;
+                        }
+                    }
                 }
                 FieldModifier::Repeated => {
-                    write!(
-                        writer,
-                        "Some(map.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect())",
-                        resolver.rust_type(path)
-                    )?;
+                    cfg_if::cfg_if! {
+                        if #[cfg(feature = "no_std_serde")] {
+                            write!(
+                                writer,
+                                "Some(map.next_value::<::prost::alloc::vec::Vec<{}>>()?.into_iter().map(|x| x as i32).collect())",
+                                resolver.rust_type(path)
+                            )?;
+                        } else {
+                            write!(
+                                writer,
+                                "Some(map.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect())",
+                                resolver.rust_type(path)
+                            )?;
+                        }
+                    }
                 }
                 _ => {
                     write!(
@@ -901,16 +1064,40 @@ fn write_deserialize_field<W: Write>(
                 write!(writer, "Some(")?;
                 writeln!(writer)?;
                 match btree_map {
-                    true => write!(
-                        writer,
-                        "{}map.next_value::<std::collections::BTreeMap<",
-                        Indent(indent + 2),
-                    )?,
-                    false => write!(
-                        writer,
-                        "{}map.next_value::<std::collections::HashMap<",
-                        Indent(indent + 2),
-                    )?,
+                    true => {
+                        cfg_if::cfg_if! {
+                            if #[cfg(feature = "no_std_serde")] {
+                                write!(
+                                    writer,
+                                    "{}map.next_value::<::prost::alloc::collections::BTreeMap<",
+                                    Indent(indent + 2),
+                                )?
+                            } else {
+                                write!(
+                                    writer,
+                                    "{}map.next_value::<std::collections::BTreeMap<",
+                                    Indent(indent + 2),
+                                )?
+                            }
+                        }
+                    }
+                    false => {
+                        cfg_if::cfg_if! {
+                            if #[cfg(feature = "no_std_serde")] {
+                                write!(
+                                    writer,
+                                    "{}map.next_value::<::prost::alloc::collections::BTreeMap<",
+                                    Indent(indent + 2),
+                                )?
+                            } else {
+                                write!(
+                                    writer,
+                                    "{}map.next_value::<std::collections::HashMap<",
+                                    Indent(indent + 2),
+                                )?
+                            }
+                        }
+                    }
                 }
 
                 let map_k = match key {
@@ -1010,20 +1197,42 @@ fn write_encode_scalar_field<W: Write>(
 
     match field_modifier {
         FieldModifier::Optional => {
-            writeln!(
-                writer,
-                "{}map.next_value::<::std::option::Option<{}>>()?.map(|x| x.0)",
-                Indent(indent + 1),
-                deserializer
-            )?;
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "no_std_serde")] {
+                    writeln!(
+                        writer,
+                        "{}map.next_value::<::core::option::Option<{}>>()?.map(|x| x.0)",
+                        Indent(indent + 1),
+                        deserializer
+                    )?;
+                } else {
+                    writeln!(
+                        writer,
+                        "{}map.next_value::<std::option::Option<{}>>()?.map(|x| x.0)",
+                        Indent(indent + 1),
+                        deserializer
+                    )?;
+                }
+            }
         }
         FieldModifier::Repeated => {
-            writeln!(
-                writer,
-                "{}Some(map.next_value::<Vec<{}>>()?",
-                Indent(indent + 1),
-                deserializer
-            )?;
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "no_std_serde")] {
+                    writeln!(
+                        writer,
+                        "{}Some(map.next_value::<::prost::alloc::vec::Vec<{}>>()?",
+                        Indent(indent + 1),
+                        deserializer
+                    )?;
+                } else {
+                    writeln!(
+                        writer,
+                        "{}Some(map.next_value::<Vec<{}>>()?",
+                        Indent(indent + 1),
+                        deserializer
+                    )?;
+                }
+            }
             writeln!(
                 writer,
                 "{}.into_iter().map(|x| x.0).collect())",

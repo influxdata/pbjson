@@ -89,50 +89,99 @@ fn write_visitor<W: Write>(
     variants: &[(String, i32, String)],
 ) -> Result<()> {
     // Protobuf supports deserialization of enumerations both from string and integer values
-    writeln!(
-        writer,
-        r#"{indent}struct GeneratedVisitor;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "no_std_serde")] {
+            writeln!(
+                writer,
+                r#"{indent}struct GeneratedVisitor;
 
-{indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
-{indent}    type Value = {rust_type};
+        {indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+        {indent}    type Value = {rust_type};
 
-{indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
-{indent}        write!(formatter, "expected one of: {{:?}}", &FIELDS)
-{indent}    }}
+        {indent}    fn expecting(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {{
+        {indent}        write!(formatter, "expected one of: {{:?}}", &FIELDS)
+        {indent}    }}
 
-{indent}    fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
-{indent}    where
-{indent}        E: serde::de::Error,
-{indent}    {{
-{indent}        use std::convert::TryFrom;
-{indent}        i32::try_from(v)
-{indent}            .ok()
-{indent}            .and_then({rust_type}::from_i32)
-{indent}            .ok_or_else(|| {{
-{indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
-{indent}            }})
-{indent}    }}
+        {indent}    fn visit_i64<E>(self, v: i64) ->::core::result::Result<Self::Value, E>
+        {indent}    where
+        {indent}        E: serde::de::Error,
+        {indent}    {{
+        {indent}        use ::core::convert::TryFrom;
+        {indent}        i32::try_from(v)
+        {indent}            .ok()
+        {indent}            .and_then({rust_type}::from_i32)
+        {indent}            .ok_or_else(|| {{
+        {indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
+        {indent}            }})
+        {indent}    }}
 
-{indent}    fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
-{indent}    where
-{indent}        E: serde::de::Error,
-{indent}    {{
-{indent}        use std::convert::TryFrom;
-{indent}        i32::try_from(v)
-{indent}            .ok()
-{indent}            .and_then({rust_type}::from_i32)
-{indent}            .ok_or_else(|| {{
-{indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
-{indent}            }})
-{indent}    }}
+        {indent}    fn visit_u64<E>(self, v: u64) -> ::core::result::Result<Self::Value, E>
+        {indent}    where
+        {indent}        E: serde::de::Error,
+        {indent}    {{
+        {indent}        use ::core::convert::TryFrom;
+        {indent}        i32::try_from(v)
+        {indent}            .ok()
+        {indent}            .and_then({rust_type}::from_i32)
+        {indent}            .ok_or_else(|| {{
+        {indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
+        {indent}            }})
+        {indent}    }}
 
-{indent}    fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
-{indent}    where
-{indent}        E: serde::de::Error,
-{indent}    {{"#,
-        indent = Indent(indent),
-        rust_type = rust_type,
-    )?;
+        {indent}    fn visit_str<E>(self, value: &str) -> ::core::result::Result<Self::Value, E>
+        {indent}    where
+        {indent}        E: serde::de::Error,
+        {indent}    {{"#,
+                indent = Indent(indent),
+                rust_type = rust_type,
+            )?;
+        } else {
+            writeln!(
+                writer,
+                r#"{indent}struct GeneratedVisitor;
+
+        {indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+        {indent}    type Value = {rust_type};
+
+        {indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+        {indent}        write!(formatter, "expected one of: {{:?}}", &FIELDS)
+        {indent}    }}
+
+        {indent}    fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+        {indent}    where
+        {indent}        E: serde::de::Error,
+        {indent}    {{
+        {indent}        use std::convert::TryFrom;
+        {indent}        i32::try_from(v)
+        {indent}            .ok()
+        {indent}            .and_then({rust_type}::from_i32)
+        {indent}            .ok_or_else(|| {{
+        {indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
+        {indent}            }})
+        {indent}    }}
+
+        {indent}    fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+        {indent}    where
+        {indent}        E: serde::de::Error,
+        {indent}    {{
+        {indent}        use std::convert::TryFrom;
+        {indent}        i32::try_from(v)
+        {indent}            .ok()
+        {indent}            .and_then({rust_type}::from_i32)
+        {indent}            .ok_or_else(|| {{
+        {indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
+        {indent}            }})
+        {indent}    }}
+
+        {indent}    fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+        {indent}    where
+        {indent}        E: serde::de::Error,
+        {indent}    {{"#,
+                indent = Indent(indent),
+                rust_type = rust_type,
+            )?;
+        }
+    }
 
     writeln!(writer, "{}match value {{", Indent(indent + 2))?;
     for (variant_name, _, rust_variant) in variants {

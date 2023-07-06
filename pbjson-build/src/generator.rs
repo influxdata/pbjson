@@ -35,17 +35,33 @@ fn write_fields_array<'a, W: Write, I: Iterator<Item = &'a str>>(
 }
 
 fn write_serialize_start<W: Write>(indent: usize, rust_type: &str, writer: &mut W) -> Result<()> {
-    writeln!(
-        writer,
-        r#"{indent}impl serde::Serialize for {rust_type} {{
-{indent}    #[allow(deprecated)]
-{indent}    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-{indent}    where
-{indent}        S: serde::Serializer,
-{indent}    {{"#,
-        indent = Indent(indent),
-        rust_type = rust_type
-    )
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "no_std_serde")] {
+            writeln!(
+                writer,
+                r#"{indent}impl serde::Serialize for {rust_type} {{
+    {indent}    #[allow(deprecated)]
+    {indent}    fn serialize<S>(&self, serializer: S) -> ::core::result::Result<S::Ok, S::Error>
+    {indent}    where
+    {indent}        S: serde::Serializer,
+    {indent}    {{"#,
+                indent = Indent(indent),
+                rust_type = rust_type
+            )
+        } else {
+            writeln!(
+                writer,
+                r#"{indent}impl serde::Serialize for {rust_type} {{
+    {indent}    #[allow(deprecated)]
+    {indent}    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    {indent}    where
+    {indent}        S: serde::Serializer,
+    {indent}    {{"#,
+                indent = Indent(indent),
+                rust_type = rust_type
+            )
+        }
+    }
 }
 
 fn write_serialize_end<W: Write>(indent: usize, writer: &mut W) -> Result<()> {
@@ -58,17 +74,33 @@ fn write_serialize_end<W: Write>(indent: usize, writer: &mut W) -> Result<()> {
 }
 
 fn write_deserialize_start<W: Write>(indent: usize, rust_type: &str, writer: &mut W) -> Result<()> {
-    writeln!(
-        writer,
-        r#"{indent}impl<'de> serde::Deserialize<'de> for {rust_type} {{
-{indent}    #[allow(deprecated)]
-{indent}    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-{indent}    where
-{indent}        D: serde::Deserializer<'de>,
-{indent}    {{"#,
-        indent = Indent(indent),
-        rust_type = rust_type
-    )
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "no_std_serde")] {
+            writeln!(
+                writer,
+                r#"{indent}impl<'de> serde::Deserialize<'de> for {rust_type} {{
+        {indent}    #[allow(deprecated)]
+        {indent}    fn deserialize<D>(deserializer: D) -> ::core::result::Result<Self, D::Error>
+        {indent}    where
+        {indent}        D: serde::Deserializer<'de>,
+        {indent}    {{"#,
+                indent = Indent(indent),
+                rust_type = rust_type
+            )
+        } else {
+            writeln!(
+                writer,
+                r#"{indent}impl<'de> serde::Deserialize<'de> for {rust_type} {{
+        {indent}    #[allow(deprecated)]
+        {indent}    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+        {indent}    where
+        {indent}        D: serde::Deserializer<'de>,
+        {indent}    {{"#,
+                indent = Indent(indent),
+                rust_type = rust_type
+            )
+        }
+    }
 }
 
 fn write_deserialize_end<W: Write>(indent: usize, writer: &mut W) -> Result<()> {
