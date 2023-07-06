@@ -54,7 +54,7 @@ pub mod private {
         {
             let content = Content::deserialize(deserializer)?;
             Ok(Self(match content {
-                Content::Str(v) => v.parse().map_err(|_| D::Error::custom("parse error"))?,
+                Content::Str(v) => v.parse().map_err(|_| serde::de::Error::custom("parse error"))?,
                 Content::Number(v) => v,
             }))
         }
@@ -86,7 +86,7 @@ pub mod private {
                     }
                     _ => Err(e),
                 })
-                .map_err(|_| D::Error::custom("parse error"))?;
+                .map_err(|_| serde::de::Error::custom("parse error"))?;
             Ok(decoded)
         }
     }
