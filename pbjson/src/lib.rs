@@ -8,6 +8,7 @@
 //! [2]: https://developers.google.com/protocol-buffers/docs/proto3#json
 //! [3]: https://docs.rs/pbjson-build
 //!
+#![no_std]
 #![deny(rustdoc::broken_intra_doc_links, rustdoc::bare_urls, rust_2018_idioms)]
 #![warn(
     missing_debug_implementations,
@@ -17,15 +18,18 @@
     clippy::future_not_send
 )]
 
+extern crate alloc;
+
 #[doc(hidden)]
 pub mod private {
     /// Re-export base64
     pub use base64;
 
+    use alloc::borrow::Cow;
+    use alloc::vec::Vec;
+    use core::str::FromStr;
     use serde::de::Visitor;
     use serde::Deserialize;
-    use std::borrow::Cow;
-    use std::str::FromStr;
 
     /// Used to parse a number from either a string or its raw representation
     #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Hash, Ord, Eq)]
@@ -42,7 +46,7 @@ pub mod private {
     impl<'de, T> serde::Deserialize<'de> for NumberDeserialize<T>
     where
         T: FromStr + serde::Deserialize<'de>,
-        <T as FromStr>::Err: std::error::Error,
+        <T as FromStr>::Err: core::fmt::Display,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
@@ -61,7 +65,7 @@ pub mod private {
     impl<'de> Visitor<'de> for Base64Visitor {
         type Value = Vec<u8>;
 
-        fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fn expecting(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
             formatter.write_str("a base64 string")
         }
 
@@ -114,7 +118,7 @@ pub mod private {
             for _ in 0..20 {
                 let mut rng = thread_rng();
                 let len = rng.gen_range(50..100);
-                let raw: Vec<_> = std::iter::from_fn(|| Some(rng.gen())).take(len).collect();
+                let raw: Vec<_> = core::iter::from_fn(|| Some(rng.gen())).take(len).collect();
 
                 for config in [
                     base64::STANDARD,
