@@ -27,6 +27,7 @@
     clippy::enum_variant_names,
     clippy::use_self
 )]
+
 mod pb {
     pub mod google {
         pub mod protobuf {

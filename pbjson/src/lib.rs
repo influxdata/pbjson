@@ -8,7 +8,7 @@
 //! [2]: https://developers.google.com/protocol-buffers/docs/proto3#json
 //! [3]: https://docs.rs/pbjson-build
 //!
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![deny(rustdoc::broken_intra_doc_links, rustdoc::bare_urls)]
 #![warn(
     missing_debug_implementations,
@@ -18,12 +18,17 @@
     clippy::future_not_send
 )]
 
+#[cfg(not(feature = "std"))]
+pub mod private {
+    pub use base64;
+}
+
 #[doc(hidden)]
+#[cfg(feature = "std")]
 pub mod private {
     extern crate alloc;
     extern crate core;
 
-    /// Re-export base64
     pub use base64;
 
     use alloc::borrow::Cow;
@@ -47,7 +52,7 @@ pub mod private {
     impl<'de, T> serde::Deserialize<'de> for NumberDeserialize<T>
     where
         T: FromStr + serde::Deserialize<'de>,
-        <T as FromStr>::Err: core::fmt::Display,
+        <T as FromStr>::Err: std::error::Error,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
@@ -95,6 +100,7 @@ pub mod private {
     #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Hash, Ord, Eq)]
     pub struct BytesDeserialize<T>(pub T);
 
+    #[cfg(feature = "std")]
     impl<'de, T> Deserialize<'de> for BytesDeserialize<T>
     where
         T: From<Vec<u8>>,
@@ -119,7 +125,7 @@ pub mod private {
             for _ in 0..20 {
                 let mut rng = thread_rng();
                 let len = rng.gen_range(50..100);
-                let raw: Vec<_> = core::iter::from_fn(|| Some(rng.gen())).take(len).collect();
+                let raw: Vec<_> = std::iter::from_fn(|| Some(rng.gen())).take(len).collect();
 
                 for config in [
                     base64::STANDARD,
