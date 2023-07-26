@@ -1,5 +1,5 @@
 [package]
-name = "pbjson"
+name = "informalsystems-pbjson"
 version = "0.5.1"
 authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
 edition = "2021"
@@ -7,10 +7,12 @@ description = "Utilities for pbjson conversion"
 license = "MIT"
 keywords = ["protobuf", "json", "serde"]
 categories = ["encoding"]
-repository = "https://github.com/influxdata/pbjson"
+repository = "https://github.com/informalsystems/pbjson"
+
+[lib]
+name = "pbjson"
 
 [dependencies]
-
 serde = { version = "1.0", features = ["derive"] }
 base64 = "0.13"
 

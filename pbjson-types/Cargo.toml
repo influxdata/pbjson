@@ -1,5 +1,5 @@
 [package]
-name = "pbjson-types"
+name = "informalsystems-pbjson-types"
 version = "0.5.1"
 authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
 description = "Protobuf well known types with serde serialization support"
@@ -7,13 +7,16 @@ edition = "2021"
 license = "MIT"
 keywords = ["protobuf", "json", "serde"]
 categories = ["encoding"]
-repository = "https://github.com/influxdata/pbjson"
+repository = "https://github.com/informalsystems/pbjson"
 exclude = ["protos/*"]
+
+[lib]
+name = "pbjson_types"
 
 [dependencies] # In alphabetical order
 bytes = "1.0"
 chrono = { version = "0.4", default-features = false, features = ["alloc"] }
-pbjson = { path = "../pbjson", version = "0.5" }
+informalsystems-pbjson = { path = "../pbjson", version = "0.5" }
 prost = "0.11"
 serde = { version = "1.0", features = ["derive"] }
 
@@ -22,4 +25,4 @@ serde_json = "1.0"
 
 [build-dependencies] # In alphabetical order
 prost-build = "0.11"
-pbjson-build = { path = "../pbjson-build", version = "0.5" }
+informalsystems-pbjson-build = { path = "../pbjson-build", version = "0.5" }
