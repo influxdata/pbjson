@@ -5,6 +5,7 @@ authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
 edition = "2021"
 description = "Test resources for pbjson converion"
 repository = "https://github.com/informalsystems/pbjson"
+publish = false
 
 [lib]
 name = "pbjson_test"
