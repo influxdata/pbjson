@@ -1,5 +1,5 @@
 [package]
-name = "pbjson-build"
+name = "informalsystems-pbjson-build"
 version = "0.5.1"
 authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
 edition = "2021"
@@ -7,13 +7,16 @@ description = "Generates Serialize and Deserialize implementations for prost mes
 license = "MIT"
 keywords = ["protobuf", "json", "serde"]
 categories = ["encoding"]
-repository = "https://github.com/influxdata/pbjson"
+repository = "https://github.com/informalsystems/pbjson"
+
+[lib]
+name = "pbjson_build"
 
 [dependencies]
 heck = "0.4"
 prost = "0.11"
 prost-types = "0.11"
-itertools = "0.10"
+itertools = "0.11"
 
 [dev-dependencies]
-tempfile = "3.1"
+tempfile = "3"
