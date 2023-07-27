@@ -37,10 +37,10 @@ jobs:
         with:
           components: clippy
       - name: Clippy
-        uses: actions-rs/clippy-check@v1
+        uses: giraffate/clippy-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --all-targets
+          clippy_flags: ''
+          reporter: 'github-pr-check'
 
   publish-dry-run:
     name: Publish (dry run)
@@ -68,6 +68,8 @@ jobs:
           override: true
       - name: Install cargo-nextest
         uses: taiki-e/install-action@nextest
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
       - name: Build tests
         uses: actions-rs/cargo@v1
         with:

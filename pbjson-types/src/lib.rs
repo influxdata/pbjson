@@ -9,6 +9,7 @@
 //! [2]: https://docs.rs/serde/1.0.130/serde/trait.Deserialize.html
 //! [3]: https://developers.google.com/protocol-buffers/docs/proto3#json
 
+#![cfg_attr(not(feature = "std"), no_std)]
 #![deny(rustdoc::broken_intra_doc_links, rustdoc::bare_urls, rust_2018_idioms)]
 #![warn(
     missing_debug_implementations,
@@ -17,6 +18,8 @@
     clippy::clone_on_ref_ptr,
     clippy::future_not_send
 )]
+
+extern crate alloc;
 
 #[allow(
     unused_imports,

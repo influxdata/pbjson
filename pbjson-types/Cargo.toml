@@ -13,12 +13,16 @@ exclude = ["protos/*"]
 [lib]
 name = "pbjson_types"
 
+[features]
+default = ["std"]
+std = ["prost/std", "serde/std"]
+
 [dependencies] # In alphabetical order
 bytes = "1.0"
 chrono = { version = "0.4", default-features = false, features = ["alloc"] }
 informalsystems-pbjson = { path = "../pbjson", version = "0.5" }
-prost = "0.11"
-serde = { version = "1.0", features = ["derive"] }
+prost = { version = "0.11", default-features = false }
+serde = { version = "1.0", features = ["derive"], default-features = false }
 
 [dev-dependencies]
 serde_json = "1.0"

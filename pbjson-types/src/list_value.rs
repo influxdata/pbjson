@@ -1,5 +1,7 @@
 use crate::ListValue;
 
+use alloc::vec::Vec;
+
 impl From<Vec<crate::Value>> for ListValue {
     fn from(values: Vec<crate::Value>) -> Self {
         Self { values }
@@ -59,7 +61,7 @@ struct ListValueVisitor;
 impl<'de> serde::de::Visitor<'de> for ListValueVisitor {
     type Value = ListValue;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         formatter.write_str("google.protobuf.ListValue")
     }
 

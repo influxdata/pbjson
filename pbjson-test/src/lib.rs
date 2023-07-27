@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+extern crate alloc;
+
 /// A test of an externally defined message
-#[derive(Clone, PartialEq, ::prost::Message, Serialize, Deserialize)]
+#[derive(Clone, Eq, PartialEq, ::prost::Message, Serialize, Deserialize)]
 pub struct ExternMessage {}
 
 /// A test of an externally defined enumeration
@@ -211,6 +213,8 @@ mod tests {
     #[test]
     #[cfg(not(any(feature = "emit-fields", feature = "use-integers-for-enums")))]
     fn test_kitchen_sink() {
+        use chrono::Timelike;
+
         let mut decoded: KitchenSink = serde_json::from_str("{}").unwrap();
 
         verify(&decoded, "{}");
@@ -547,13 +551,20 @@ mod tests {
         decoded.optional_string = None;
         verify_decode(&decoded, "{}");
 
-        let date = chrono::Utc.ymd(2072, 3, 1).and_hms_milli(5, 2, 5, 30);
+        let date = chrono::Utc
+            .with_ymd_and_hms(2072, 3, 1, 5, 2, 5)
+            .unwrap()
+            .with_nanosecond(30)
+            .unwrap();
         decoded.timestamp = Some(Timestamp {
             seconds: date.timestamp(),
             nanos: date.timestamp_subsec_nanos() as i32,
         });
 
-        verify(&decoded, r#"{"timestamp":"2072-03-01T05:02:05.030+00:00"}"#);
+        verify(
+            &decoded,
+            r#"{"timestamp":"2072-03-01T05:02:05.000000030+00:00"}"#,
+        );
 
         decoded.timestamp = None;
         verify_decode(&decoded, "{}");

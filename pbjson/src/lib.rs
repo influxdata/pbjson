@@ -8,6 +8,7 @@
 //! [2]: https://developers.google.com/protocol-buffers/docs/proto3#json
 //! [3]: https://docs.rs/pbjson-build
 //!
+#![no_std]
 #![deny(rustdoc::broken_intra_doc_links, rustdoc::bare_urls, rust_2018_idioms)]
 #![warn(
     missing_debug_implementations,
@@ -17,16 +18,19 @@
     clippy::future_not_send
 )]
 
+extern crate alloc;
+
 #[doc(hidden)]
 pub mod private {
     /// Re-export base64
     pub use base64;
 
-    use base64::Engine;
+    use alloc::borrow::Cow;
+    use alloc::str::FromStr;
+    use alloc::vec::Vec;
+
     use serde::de::Visitor;
     use serde::Deserialize;
-    use std::borrow::Cow;
-    use std::str::FromStr;
 
     /// Used to parse a number from either a string or its raw representation
     #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Hash, Ord, Eq)]
@@ -43,7 +47,7 @@ pub mod private {
     impl<'de, T> serde::Deserialize<'de> for NumberDeserialize<T>
     where
         T: FromStr + serde::Deserialize<'de>,
-        <T as FromStr>::Err: std::error::Error,
+        <T as FromStr>::Err: core::fmt::Display, // std::error::Error,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
@@ -62,7 +66,7 @@ pub mod private {
     impl<'de> Visitor<'de> for Base64Visitor {
         type Value = Vec<u8>;
 
-        fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             formatter.write_str("a base64 string")
         }
 
@@ -70,8 +74,7 @@ pub mod private {
         where
             E: serde::de::Error,
         {
-            let decoded = base64::engine::general_purpose::STANDARD
-                .decode(s)
+            let decoded = base64::decode_config(s, base64::STANDARD)
                 .or_else(|e| match e {
                     // Either standard or URL-safe base64 encoding are accepted
                     //
@@ -80,7 +83,7 @@ pub mod private {
                     // Therefore if we error out on those characters, try again with
                     // the URL-safe character set
                     base64::DecodeError::InvalidByte(_, c) if c == b'-' || c == b'_' => {
-                        base64::engine::general_purpose::URL_SAFE.decode(s)
+                        base64::decode_config(s, base64::URL_SAFE)
                     }
                     _ => Err(e),
                 })
@@ -116,15 +119,15 @@ pub mod private {
             for _ in 0..20 {
                 let mut rng = thread_rng();
                 let len = rng.gen_range(50..100);
-                let raw: Vec<_> = std::iter::from_fn(|| Some(rng.gen())).take(len).collect();
+                let raw: Vec<_> = core::iter::from_fn(|| Some(rng.gen())).take(len).collect();
 
                 for config in [
-                    base64::engine::general_purpose::STANDARD,
-                    base64::engine::general_purpose::STANDARD_NO_PAD,
-                    base64::engine::general_purpose::URL_SAFE,
-                    base64::engine::general_purpose::URL_SAFE_NO_PAD,
+                    base64::STANDARD,
+                    base64::STANDARD_NO_PAD,
+                    base64::URL_SAFE,
+                    base64::URL_SAFE_NO_PAD,
                 ] {
-                    let encoded = config.encode(&raw);
+                    let encoded = base64::encode_config(&raw, config);
 
                     let deserializer = BorrowedStrDeserializer::<'_, Error>::new(&encoded);
                     let a: Bytes = BytesDeserialize::deserialize(deserializer).unwrap().0;
