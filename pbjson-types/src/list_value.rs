@@ -79,7 +79,7 @@ impl<'de> serde::de::Visitor<'de> for ListValueVisitor {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use crate::Value;
 

@@ -15,12 +15,12 @@ name = "pbjson_types"
 
 [features]
 default = ["std"]
-std = ["prost/std", "serde/std"]
+std = ["chrono/std", "informalsystems-pbjson/std", "prost/std", "serde/std"]
 
 [dependencies] # In alphabetical order
 bytes = "1.0"
 chrono = { version = "0.4", default-features = false, features = ["alloc"] }
-informalsystems-pbjson = { path = "../pbjson", version = "0.5" }
+informalsystems-pbjson = { path = "../pbjson", version = "0.5" , default-features = false }
 prost = { version = "0.11", default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
 

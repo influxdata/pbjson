@@ -89,6 +89,6 @@ mod tests {
         assert_eq!(a.nanos, utc.timestamp_subsec_nanos() as i32);
 
         let encoded = serde_json::to_string(&a).unwrap();
-        assert_eq!(encoded, format!("\"{}\"", utc_encoded));
+        assert_eq!(encoded, alloc::format!("\"{}\"", utc_encoded));
     }
 }

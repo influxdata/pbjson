@@ -80,3 +80,8 @@ jobs:
         with:
           command: nextest
           args: run --all-features --no-fail-fast --no-capture
+      - name: Run tests (no-std)
+        uses: actions-rs/cargo@v1
+        with:
+          command: nextest
+          args: run --no-default-features --no-fail-fast --no-capture
