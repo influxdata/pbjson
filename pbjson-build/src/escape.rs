@@ -1,4 +1,4 @@
-///! Contains code to escape strings to avoid collisions with reserved Rust keywords
+//! Contains code to escape strings to avoid collisions with reserved Rust keywords
 
 pub fn escape_ident(mut ident: String) -> String {
     // Copied from prost-build::ident
