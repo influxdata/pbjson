@@ -24,3 +24,11 @@ pub fn escape_ident(mut ident: String) -> String {
     };
     ident
 }
+
+pub fn escape_type(mut ident: String) -> String {
+    // this keyword is not supported as a raw identifier and is therefore suffixed with an underscore.
+    if ident == "Self" {
+        ident += "_";
+    }
+    ident
+}
