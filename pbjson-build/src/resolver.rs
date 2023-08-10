@@ -1,5 +1,5 @@
 use crate::descriptor::{Package, TypePath};
-use crate::escape::{escape_camel_case, escape_ident};
+use crate::escape::{escape_type, escape_ident};
 
 #[derive(Debug)]
 pub struct Resolver<'a> {
@@ -80,7 +80,7 @@ impl<'a> Resolver<'a> {
                     ret.push_str("::");
                 }
                 None => {
-                    ret.push_str(escape_camel_case(i.to_upper_camel_case()).as_str());
+                    ret.push_str(escape_type(i.to_upper_camel_case()).as_str());
                 }
             }
         }

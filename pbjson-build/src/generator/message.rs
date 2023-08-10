@@ -30,7 +30,7 @@ use super::{
     Indent,
 };
 use crate::descriptor::TypePath;
-use crate::escape::escape_camel_case;
+use crate::escape::escape_type;
 use crate::generator::write_fields_array;
 use crate::resolver::Resolver;
 
@@ -592,7 +592,7 @@ fn write_deserialize_field_name<W: Write>(
                 "{}\"{}\" => Ok(GeneratedField::{}),",
                 Indent(indent + 5),
                 json_name,
-                escape_camel_case(type_name.to_string()),
+                escape_type(type_name.to_string()),
             )?;
         }
         writeln!(
@@ -636,7 +636,7 @@ fn write_fields_enum<'a, W: Write, I: Iterator<Item = &'a str>>(
             writer,
             "{}{},",
             Indent(indent + 1),
-            escape_camel_case(type_name.to_string())
+            escape_type(type_name.to_string())
         )?;
     }
     writeln!(writer, "{}}}", Indent(indent))
