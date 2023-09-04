@@ -15,7 +15,7 @@ impl TryFrom<Timestamp> for chrono::DateTime<Utc> {
                 .map_err(|_| "out of range integral type conversion attempted")?,
         )
         .ok_or("invalid or out-of-range datetime")?;
-        Ok(Self::from_utc(dt, Utc))
+        Ok(Self::from_naive_utc_and_offset(dt, Utc))
     }
 }
 
