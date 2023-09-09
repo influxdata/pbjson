@@ -183,7 +183,7 @@ fn field_modifier(
     field: &FieldDescriptorProto,
     field_type: &FieldType,
 ) -> FieldModifier {
-    let label = Label::from_i32(field.label.expect("expected label")).expect("valid label");
+    let label = Label::try_from(field.label.expect("expected label")).expect("valid label");
     if field.proto3_optional.unwrap_or(false) {
         assert_eq!(label, Label::Optional);
         return FieldModifier::Optional;
@@ -217,7 +217,7 @@ fn field_type(descriptors: &DescriptorSet, field: &FieldDescriptorProto) -> Fiel
         Some(type_name) => resolve_type(descriptors, type_name.as_str()),
         None => {
             let scalar =
-                match Type::from_i32(field.r#type.expect("expected type")).expect("valid type") {
+                match Type::try_from(field.r#type.expect("expected type")).expect("valid type") {
                     Type::Double => ScalarType::F64,
                     Type::Float => ScalarType::F32,
                     Type::Int64 | Type::Sfixed64 | Type::Sint64 => ScalarType::I64,
