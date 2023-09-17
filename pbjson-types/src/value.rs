@@ -152,14 +152,20 @@ impl<'de> serde::de::Visitor<'de> for KindVisitor {
     where
         E: de::Error,
     {
-        self.visit_i32(v.try_into().map_err(de::Error::custom)?)
+        if v > -(1 << f64::MANTISSA_DIGITS) && v < 1 << f64::MANTISSA_DIGITS {
+            return Ok(Kind::NumberValue(v as f64));
+        }
+
+        Err(de::Error::custom(
+            "out of range integral type conversion attempted",
+        ))
     }
 
     fn visit_i128<E>(self, v: i128) -> Result<Self::Value, E>
     where
         E: de::Error,
     {
-        self.visit_i32(v.try_into().map_err(de::Error::custom)?)
+        self.visit_i64(v.try_into().map_err(de::Error::custom)?)
     }
 
     fn visit_u8<E>(self, v: u8) -> Result<Self::Value, E>
@@ -187,14 +193,20 @@ impl<'de> serde::de::Visitor<'de> for KindVisitor {
     where
         E: de::Error,
     {
-        self.visit_u32(v.try_into().map_err(de::Error::custom)?)
+        if v < 1 << f64::MANTISSA_DIGITS {
+            return Ok(Kind::NumberValue(v as f64));
+        }
+
+        Err(de::Error::custom(
+            "out of range integral type conversion attempted",
+        ))
     }
 
     fn visit_u128<E>(self, v: u128) -> Result<Self::Value, E>
     where
         E: de::Error,
     {
-        self.visit_u32(v.try_into().map_err(de::Error::custom)?)
+        self.visit_u64(v.try_into().map_err(de::Error::custom)?)
     }
 
     fn visit_f32<E>(self, v: f32) -> Result<Self::Value, E>
@@ -324,5 +336,29 @@ mod tests {
         assert!(serde_json::to_value(Value::from(f64::NAN)).is_err());
         assert!(serde_json::to_value(Value::from(f64::INFINITY)).is_err());
         assert!(serde_json::to_value(Value::from(f64::NEG_INFINITY)).is_err());
+    }
+
+    #[test]
+    fn parse_max_safe_integer() {
+        let max_safe_integer: i64 = 9007199254740991;
+        let json = serde_json::json!(max_safe_integer);
+        let vec = serde_json::to_vec(&json).unwrap();
+        let pb = serde_json::from_slice::<Value>(&vec).unwrap();
+        assert_eq!(
+            serde_json::to_value(pb).unwrap(),
+            serde_json::json!(max_safe_integer as f64)
+        );
+    }
+
+    #[test]
+    fn parse_min_safe_integer() {
+        let min_safe_integer: i64 = -9007199254740991;
+        let json = serde_json::json!(min_safe_integer);
+        let vec = serde_json::to_vec(&json).unwrap();
+        let pb = serde_json::from_slice::<Value>(&vec).unwrap();
+        assert_eq!(
+            serde_json::to_value(pb).unwrap(),
+            serde_json::json!(min_safe_integer as f64)
+        );
     }
 }
