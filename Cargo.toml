@@ -1,7 +1,9 @@
 [workspace]
 members = [
-  "pbjson",
-  "pbjson-build",
-  "pbjson-test",
-  "pbjson-types",
+    "pbjson",
+    "pbjson-build",
+    "pbjson-test",
+    "pbjson-types",
 ]
+
+resolver = "2"
