@@ -1,23 +1,21 @@
 //! Compiles Protocol Buffers and FlatBuffers schema definitions into
 //! native Rust types.
 
-use std::env;
 use std::path::PathBuf;
 
 type Error = Box<dyn std::error::Error>;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 fn main() -> Result<()> {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let descriptor_path = root.join("descriptors.bin");
+    let descriptor_path: PathBuf = "descriptors.bin".into();
     println!("cargo:rerun-if-changed={}", descriptor_path.display());
 
     let mut config = prost_build::Config::new();
     config
         .file_descriptor_set_path(&descriptor_path)
         .compile_well_known_types()
-        .disable_comments(&["."])
-        .bytes(&[".google"])
+        .disable_comments(["."])
+        .bytes([".google"])
         .skip_protoc_run();
 
     let empty: &[&str] = &[];

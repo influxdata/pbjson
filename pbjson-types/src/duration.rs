@@ -43,7 +43,7 @@ impl Serialize for Duration {
 
         if self.nanos != 0 {
             s.push('.');
-            let f = match split_nanos(self.nanos.abs() as u32) {
+            let f = match split_nanos(self.nanos.unsigned_abs()) {
                 (millis, 0, 0) => format!("{:03}", millis),
                 (millis, micros, 0) => format!("{:03}{:03}", millis, micros),
                 (millis, micros, nanos) => format!("{:03}{:03}{:03}", millis, micros, nanos),
