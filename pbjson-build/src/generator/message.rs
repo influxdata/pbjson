@@ -30,6 +30,7 @@ use super::{
     Indent,
 };
 use crate::descriptor::TypePath;
+use crate::escape::escape_type;
 use crate::generator::write_fields_array;
 use crate::resolver::Resolver;
 
@@ -522,7 +523,7 @@ fn write_deserialize_message<W: Write>(
 {indent}        formatter.write_str("struct {name}")
 {indent}    }}
 
-{indent}    fn visit_map<V>(self, mut map: V) -> std::result::Result<{rust_type}, V::Error>
+{indent}    fn visit_map<V>(self, mut map_: V) -> std::result::Result<{rust_type}, V::Error>
 {indent}        where
 {indent}            V: serde::de::MapAccess<'de>,
 {indent}    {{"#,
@@ -552,7 +553,7 @@ fn write_deserialize_message<W: Write>(
     if !message.fields.is_empty() || !message.one_ofs.is_empty() {
         writeln!(
             writer,
-            "{}while let Some(k) = map.next_key()? {{",
+            "{}while let Some(k) = map_.next_key()? {{",
             Indent(indent + 2)
         )?;
 
@@ -587,7 +588,7 @@ fn write_deserialize_message<W: Write>(
             )?;
             writeln!(
                 writer,
-                "{}let _ = map.next_value::<serde::de::IgnoredAny>()?;",
+                "{}let _ = map_.next_value::<serde::de::IgnoredAny>()?;",
                 Indent(indent + 5),
             )?;
             writeln!(writer, "{}}}", Indent(indent + 4))?;
@@ -598,12 +599,12 @@ fn write_deserialize_message<W: Write>(
     } else {
         writeln!(
             writer,
-            "{}while map.next_key::<GeneratedField>()?.is_some() {{",
+            "{}while map_.next_key::<GeneratedField>()?.is_some() {{",
             Indent(indent + 2)
         )?;
         writeln!(
             writer,
-            "{}let _ = map.next_value::<serde::de::IgnoredAny>()?;",
+            "{}let _ = map_.next_value::<serde::de::IgnoredAny>()?;",
             Indent(indent + 3)
         )?;
         writeln!(writer, "{}}}", Indent(indent + 2))?;
@@ -725,7 +726,7 @@ fn write_deserialize_field_name<W: Write>(
                     Indent(indent + 5),
                     json_name,
                     proto_name,
-                    type_name
+                    escape_type(type_name.to_string())
                 )?;
             } else {
                 writeln!(
@@ -733,7 +734,7 @@ fn write_deserialize_field_name<W: Write>(
                     "{}\"{}\" => Ok(GeneratedField::{}),",
                     Indent(indent + 5),
                     json_name,
-                    type_name
+                    escape_type(type_name.to_string())
                 )?;
             }
         }
@@ -789,7 +790,12 @@ fn write_fields_enum<'a, W: Write, I: Iterator<Item = &'a str>>(
     )?;
     writeln!(writer, "{}enum GeneratedField {{", Indent(indent))?;
     for type_name in fields {
-        writeln!(writer, "{}{},", Indent(indent + 1), type_name)?;
+        writeln!(
+            writer,
+            "{}{},",
+            Indent(indent + 1),
+            escape_type(type_name.to_string())
+        )?;
     }
 
     if ignore_unknown_fields {
@@ -842,7 +848,7 @@ fn write_deserialize_field<W: Write>(
                 Some(deserializer) => {
                     write!(
                         writer,
-                        "map.next_value::<::std::option::Option<{}>>()?.map(|x| {}::{}(x.0))",
+                        "map_.next_value::<::std::option::Option<{}>>()?.map(|x| {}::{}(x.0))",
                         deserializer,
                         resolver.rust_type(&one_of.path),
                         field.rust_type_name()
@@ -851,7 +857,7 @@ fn write_deserialize_field<W: Write>(
                 None => {
                     write!(
                         writer,
-                        "map.next_value::<::std::option::Option<_>>()?.map({}::{})",
+                        "map_.next_value::<::std::option::Option<_>>()?.map({}::{})",
                         resolver.rust_type(&one_of.path),
                         field.rust_type_name()
                     )?;
@@ -860,7 +866,7 @@ fn write_deserialize_field<W: Write>(
             FieldType::Enum(path) => {
                 write!(
                     writer,
-                    "map.next_value::<::std::option::Option<{}>>()?.map(|x| {}::{}(x as i32))",
+                    "map_.next_value::<::std::option::Option<{}>>()?.map(|x| {}::{}(x as i32))",
                     resolver.rust_type(path),
                     resolver.rust_type(&one_of.path),
                     field.rust_type_name()
@@ -868,7 +874,7 @@ fn write_deserialize_field<W: Write>(
             }
             FieldType::Message(_) => writeln!(
                 writer,
-                "map.next_value::<::std::option::Option<_>>()?.map({}::{})",
+                "map_.next_value::<::std::option::Option<_>>()?.map({}::{})",
                 resolver.rust_type(&one_of.path),
                 field.rust_type_name()
             )?,
@@ -883,21 +889,21 @@ fn write_deserialize_field<W: Write>(
                 FieldModifier::Optional => {
                     write!(
                         writer,
-                        "map.next_value::<::std::option::Option<{}>>()?.map(|x| x as i32)",
+                        "map_.next_value::<::std::option::Option<{}>>()?.map(|x| x as i32)",
                         resolver.rust_type(path)
                     )?;
                 }
                 FieldModifier::Repeated => {
                     write!(
                         writer,
-                        "Some(map.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect())",
+                        "Some(map_.next_value::<Vec<{}>>()?.into_iter().map(|x| x as i32).collect())",
                         resolver.rust_type(path)
                     )?;
                 }
                 _ => {
                     write!(
                         writer,
-                        "Some(map.next_value::<{}>()? as i32)",
+                        "Some(map_.next_value::<{}>()? as i32)",
                         resolver.rust_type(path)
                     )?;
                 }
@@ -908,12 +914,12 @@ fn write_deserialize_field<W: Write>(
                 match btree_map {
                     true => write!(
                         writer,
-                        "{}map.next_value::<std::collections::BTreeMap<",
+                        "{}map_.next_value::<std::collections::BTreeMap<",
                         Indent(indent + 2),
                     )?,
                     false => write!(
                         writer,
-                        "{}map.next_value::<std::collections::HashMap<",
+                        "{}map_.next_value::<std::collections::HashMap<",
                         Indent(indent + 2),
                     )?,
                 }
@@ -975,9 +981,9 @@ fn write_deserialize_field<W: Write>(
             FieldType::Message(_) => match field.field_modifier {
                 FieldModifier::Repeated => {
                     // No explicit presence for repeated fields
-                    write!(writer, "Some(map.next_value()?)")?;
+                    write!(writer, "Some(map_.next_value()?)")?;
                 }
-                _ => write!(writer, "map.next_value()?")?,
+                _ => write!(writer, "map_.next_value()?")?,
             },
         },
     }
@@ -1004,9 +1010,9 @@ fn write_encode_scalar_field<W: Write>(
         None => {
             return match field_modifier {
                 FieldModifier::Optional => {
-                    write!(writer, "map.next_value()?")
+                    write!(writer, "map_.next_value()?")
                 }
-                _ => write!(writer, "Some(map.next_value()?)"),
+                _ => write!(writer, "Some(map_.next_value()?)"),
             };
         }
     };
@@ -1017,7 +1023,7 @@ fn write_encode_scalar_field<W: Write>(
         FieldModifier::Optional => {
             writeln!(
                 writer,
-                "{}map.next_value::<::std::option::Option<{}>>()?.map(|x| x.0)",
+                "{}map_.next_value::<::std::option::Option<{}>>()?.map(|x| x.0)",
                 Indent(indent + 1),
                 deserializer
             )?;
@@ -1025,7 +1031,7 @@ fn write_encode_scalar_field<W: Write>(
         FieldModifier::Repeated => {
             writeln!(
                 writer,
-                "{}Some(map.next_value::<Vec<{}>>()?",
+                "{}Some(map_.next_value::<Vec<{}>>()?",
                 Indent(indent + 1),
                 deserializer
             )?;
@@ -1038,7 +1044,7 @@ fn write_encode_scalar_field<W: Write>(
         _ => {
             writeln!(
                 writer,
-                "{}Some(map.next_value::<{}>()?.0)",
+                "{}Some(map_.next_value::<{}>()?.0)",
                 Indent(indent + 1),
                 deserializer
             )?;

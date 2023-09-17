@@ -13,6 +13,7 @@ fn main() -> Result<()> {
         root.join("syntax3.proto"),
         root.join("common.proto"),
         root.join("duplicate_name.proto"),
+        root.join("duplicate_number.proto"),
         root.join("escape.proto"),
     ];
 

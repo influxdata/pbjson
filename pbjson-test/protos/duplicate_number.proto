@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package test.duplicate_number;
+
+message Compressor {
+    enum CompressionLevel {
+        option allow_alias = true;
+
+        DEFAULT = 0;
+        BEST_SPEED = 1;
+        COMPRESSION_LEVEL_1 = 1;
+        COMPRESSION_LEVEL_2 = 2;
+        COMPRESSION_LEVEL_3 = 3;
+        BEST_COMPRESSION = 3;
+    }
+}

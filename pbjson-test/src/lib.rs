@@ -39,6 +39,11 @@ pub mod test {
         include!(concat!(env!("OUT_DIR"), "/test.duplicate_name.serde.rs"));
     }
 
+    pub mod duplicate_number {
+        include!(concat!(env!("OUT_DIR"), "/test.duplicate_number.rs"));
+        include!(concat!(env!("OUT_DIR"), "/test.duplicate_number.serde.rs"));
+    }
+
     pub mod escape {
         include!(concat!(
             env!("OUT_DIR"),
