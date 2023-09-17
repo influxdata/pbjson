@@ -547,7 +547,11 @@ mod tests {
         decoded.optional_string = None;
         verify_decode(&decoded, "{}");
 
-        let date = chrono::Utc.ymd(2072, 3, 1).and_hms_milli(5, 2, 5, 30);
+        let date = chrono::Utc
+            .with_ymd_and_hms(2072, 3, 1, 5, 2, 5)
+            .unwrap()
+            .checked_add_signed(chrono::Duration::milliseconds(30))
+            .unwrap();
         decoded.timestamp = Some(Timestamp {
             seconds: date.timestamp(),
             nanos: date.timestamp_subsec_nanos() as i32,

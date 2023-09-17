@@ -28,7 +28,7 @@ fn main() -> Result<()> {
         .compile_well_known_types()
         .extern_path(".google.protobuf", "::pbjson_types")
         .extern_path(".test.external", "crate")
-        .bytes(&[".test"])
+        .bytes([".test"])
         .protoc_arg("--experimental_allow_proto3_optional");
 
     if cfg!(feature = "btree") {
