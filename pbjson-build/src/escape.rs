@@ -1,4 +1,4 @@
-///! Contains code to escape strings to avoid collisions with reserved Rust keywords
+//! Contains code to escape strings to avoid collisions with reserved Rust keywords
 
 pub fn escape_ident(mut ident: String) -> String {
     // Copied from prost-build::ident
@@ -22,5 +22,13 @@ pub fn escape_ident(mut ident: String) -> String {
         "self" | "super" | "extern" | "crate" => ident += "_",
         _ => (),
     };
+    ident
+}
+
+pub fn escape_type(mut ident: String) -> String {
+    // this keyword is not supported as a raw identifier and is therefore suffixed with an underscore.
+    if ident == "Self" {
+        ident += "_";
+    }
     ident
 }
