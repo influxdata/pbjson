@@ -22,6 +22,8 @@ pub mod private {
     /// Re-export base64
     pub use base64;
 
+    use base64::engine::DecodePaddingMode;
+    use base64::engine::{GeneralPurpose, GeneralPurposeConfig};
     use base64::Engine;
     use serde::de::Visitor;
     use serde::Deserialize;
@@ -70,7 +72,14 @@ pub mod private {
         where
             E: serde::de::Error,
         {
-            let decoded = base64::engine::general_purpose::STANDARD
+            const INDIFFERENT_PAD: GeneralPurposeConfig = GeneralPurposeConfig::new()
+                .with_decode_padding_mode(DecodePaddingMode::Indifferent);
+            const STANDARD_INDIFFERENT_PAD: GeneralPurpose =
+                GeneralPurpose::new(&base64::alphabet::STANDARD, INDIFFERENT_PAD);
+            const URL_SAFE_INDIFFERENT_PAD: GeneralPurpose =
+                GeneralPurpose::new(&base64::alphabet::URL_SAFE, INDIFFERENT_PAD);
+
+            let decoded = STANDARD_INDIFFERENT_PAD
                 .decode(s)
                 .or_else(|e| match e {
                     // Either standard or URL-safe base64 encoding are accepted
@@ -80,7 +89,7 @@ pub mod private {
                     // Therefore if we error out on those characters, try again with
                     // the URL-safe character set
                     base64::DecodeError::InvalidByte(_, c) if c == b'-' || c == b'_' => {
-                        base64::engine::general_purpose::URL_SAFE.decode(s)
+                        URL_SAFE_INDIFFERENT_PAD.decode(s)
                     }
                     _ => Err(e),
                 })
