@@ -12,7 +12,7 @@ use prost_types::{
     FileDescriptorProto, FileDescriptorSet, MessageOptions, OneofDescriptorProto,
 };
 
-use crate::escape::escape_ident;
+use crate::escape::{escape_ident, escape_type};
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct Package {
@@ -75,7 +75,7 @@ impl TypeName {
 
     pub fn to_upper_camel_case(&self) -> String {
         use heck::ToUpperCamelCase;
-        self.0.to_upper_camel_case()
+        escape_type(self.0.to_upper_camel_case())
     }
 }
 
