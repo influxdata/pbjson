@@ -109,10 +109,9 @@ fn write_visitor<W: Write>(
 {indent}    where
 {indent}        E: serde::de::Error,
 {indent}    {{
-{indent}        use std::convert::TryFrom;
 {indent}        i32::try_from(v)
 {indent}            .ok()
-{indent}            .and_then({rust_type}::from_i32)
+{indent}            .and_then(|x| x.try_into().ok())
 {indent}            .ok_or_else(|| {{
 {indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
 {indent}            }})
@@ -122,10 +121,9 @@ fn write_visitor<W: Write>(
 {indent}    where
 {indent}        E: serde::de::Error,
 {indent}    {{
-{indent}        use std::convert::TryFrom;
 {indent}        i32::try_from(v)
 {indent}            .ok()
-{indent}            .and_then({rust_type}::from_i32)
+{indent}            .and_then(|x| x.try_into().ok())
 {indent}            .ok_or_else(|| {{
 {indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
 {indent}            }})
