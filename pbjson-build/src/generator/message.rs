@@ -208,10 +208,10 @@ fn write_decode_variant<W: Write>(
     path: &TypePath,
     writer: &mut W,
 ) -> Result<()> {
-    writeln!(writer, "{}::from_i32({})", resolver.rust_type(path), value)?;
+    writeln!(writer, "{}::try_from({})", resolver.rust_type(path), value)?;
     write!(
         writer,
-        "{}.ok_or_else(|| serde::ser::Error::custom(format!(\"Invalid variant {{}}\", {})))",
+        "{}.map_err(|_| serde::ser::Error::custom(format!(\"Invalid variant {{}}\", {})))",
         Indent(indent),
         value
     )
