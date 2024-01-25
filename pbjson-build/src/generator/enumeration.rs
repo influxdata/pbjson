@@ -20,6 +20,7 @@ pub fn generate_enum<W: Write>(
     descriptor: &EnumDescriptor,
     writer: &mut W,
     use_integers_for_enums: bool,
+    enums_to_lowercase: bool,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(path);
 
@@ -57,12 +58,18 @@ pub fn generate_enum<W: Write>(
     } else {
         writeln!(writer, "{}let variant = match self {{", Indent(2))?;
         for (variant_name, _, rust_variant) in &variants {
+            let renamed_variant_name = if enums_to_lowercase {
+                variant_name.to_lowercase()
+            } else {
+                variant_name.clone()
+            };
+
             writeln!(
                 writer,
                 "{}Self::{} => \"{}\",",
                 Indent(3),
                 rust_variant,
-                variant_name
+                renamed_variant_name
             )?;
         }
         writeln!(writer, "{}}};", Indent(2))?;
@@ -74,7 +81,7 @@ pub fn generate_enum<W: Write>(
     // Generate Deserialize
     write_deserialize_start(0, &rust_type, writer)?;
     write_fields_array(writer, 2, variants.iter().map(|(name, _, _)| name.as_str()))?;
-    write_visitor(writer, 2, &rust_type, &variants)?;
+    write_visitor(writer, 2, &rust_type, &variants, enums_to_lowercase)?;
 
     // Use deserialize_any to allow users to provide integers or strings
     writeln!(
@@ -92,6 +99,7 @@ fn write_visitor<W: Write>(
     indent: usize,
     rust_type: &str,
     variants: &[(String, i32, String)],
+    enums_to_lowercase: bool,
 ) -> Result<()> {
     // Protobuf supports deserialization of enumerations both from string and integer values
     writeln!(
@@ -139,11 +147,16 @@ fn write_visitor<W: Write>(
 
     writeln!(writer, "{}match value {{", Indent(indent + 2))?;
     for (variant_name, _, rust_variant) in variants {
+        let renamed_variant_name = if enums_to_lowercase {
+            variant_name.to_lowercase()
+        } else {
+            variant_name.clone()
+        };
         writeln!(
             writer,
             "{}\"{}\" => Ok({}::{}),",
             Indent(indent + 3),
-            variant_name,
+            renamed_variant_name,
             rust_type,
             rust_variant
         )?;

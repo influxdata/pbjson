@@ -108,6 +108,7 @@ pub struct Builder {
     emit_fields: bool,
     use_integers_for_enums: bool,
     preserve_proto_field_names: bool,
+    enums_to_lowercase: bool,
 }
 
 impl Builder {
@@ -199,6 +200,12 @@ impl Builder {
         self
     }
 
+    /// Serde enums to lowercase
+    pub fn enums_to_lowercase(&mut self) -> &mut Self {
+        self.enums_to_lowercase = true;
+        self
+    }
+
     /// Generates code for all registered types where `prefixes` contains a prefix of
     /// the fully-qualified path of the type
     pub fn build<S: AsRef<str>>(&mut self, prefixes: &[S]) -> Result<()> {
@@ -277,6 +284,7 @@ impl Builder {
                     descriptor,
                     writer,
                     self.use_integers_for_enums,
+                    self.enums_to_lowercase,
                 )?,
                 Descriptor::Message(descriptor) => {
                     if let Some(message) = resolve_message(&self.descriptors, descriptor) {
