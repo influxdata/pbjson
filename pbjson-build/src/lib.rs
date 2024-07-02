@@ -288,7 +288,7 @@ impl Builder {
                             &self.btree_map_paths,
                             self.emit_fields,
                             self.preserve_proto_field_names,
-                        )?
+                        )?;
                     }
                 }
             }
