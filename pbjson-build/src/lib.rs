@@ -107,6 +107,7 @@ pub struct Builder {
     btree_map_paths: Vec<String>,
     emit_fields: bool,
     use_integers_for_enums: bool,
+    support_camel_case_for_enum_deserialization: bool,
     preserve_proto_field_names: bool,
 }
 
@@ -186,9 +187,16 @@ impl Builder {
         self.emit_fields = true;
         self
     }
+
     // print integers instead of enum names.
     pub fn use_integers_for_enums(&mut self) -> &mut Self {
         self.use_integers_for_enums = true;
+        self
+    }
+
+    // Deserialize camelCased strings as enums.
+    pub fn support_camel_case_for_enum_deserialization(&mut self) -> &mut Self {
+        self.support_camel_case_for_enum_deserialization = true;
         self
     }
 
@@ -277,6 +285,7 @@ impl Builder {
                     descriptor,
                     writer,
                     self.use_integers_for_enums,
+                    self.support_camel_case_for_enum_deserialization,
                 )?,
                 Descriptor::Message(descriptor) => {
                     if let Some(message) = resolve_message(&self.descriptors, descriptor) {
