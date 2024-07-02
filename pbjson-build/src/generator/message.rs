@@ -85,25 +85,25 @@ fn write_field_empty_predicate<W: Write>(
         (_, FieldModifier::Required) => unreachable!(),
         (_, FieldModifier::Repeated)
         | (FieldType::Map(_, _), _)
-        | (FieldType::Scalar(ScalarType::String), FieldModifier::UseDefault)
-        | (FieldType::Scalar(ScalarType::Bytes), FieldModifier::UseDefault) => {
+        | (FieldType::Scalar(ScalarType::String | ScalarType::Bytes), FieldModifier::UseDefault) => {
             write!(writer, "!self.{}.is_empty()", member.rust_field_name())
         }
         (_, FieldModifier::Optional) | (FieldType::Message(_), _) => {
             write!(writer, "self.{}.is_some()", member.rust_field_name())
         }
-        (FieldType::Scalar(ScalarType::F64), FieldModifier::UseDefault)
-        | (FieldType::Scalar(ScalarType::F32), FieldModifier::UseDefault) => {
+        (FieldType::Scalar(ScalarType::F64 | ScalarType::F32), FieldModifier::UseDefault) => {
             write!(writer, "self.{} != 0.", member.rust_field_name())
         }
         (FieldType::Scalar(ScalarType::Bool), FieldModifier::UseDefault) => {
             write!(writer, "self.{}", member.rust_field_name())
         }
-        (FieldType::Enum(_), FieldModifier::UseDefault)
-        | (FieldType::Scalar(ScalarType::I64), FieldModifier::UseDefault)
-        | (FieldType::Scalar(ScalarType::I32), FieldModifier::UseDefault)
-        | (FieldType::Scalar(ScalarType::U32), FieldModifier::UseDefault)
-        | (FieldType::Scalar(ScalarType::U64), FieldModifier::UseDefault) => {
+        (
+            FieldType::Enum(_)
+            | FieldType::Scalar(
+                ScalarType::I64 | ScalarType::I32 | ScalarType::U32 | ScalarType::U64,
+            ),
+            FieldModifier::UseDefault,
+        ) => {
             write!(writer, "self.{} != 0", member.rust_field_name())
         }
     }
@@ -280,9 +280,7 @@ fn write_serialize_variable<W: Write>(
         FieldType::Map(_, value_type)
             if matches!(
                 value_type.as_ref(),
-                FieldType::Scalar(ScalarType::I64)
-                    | FieldType::Scalar(ScalarType::U64)
-                    | FieldType::Scalar(ScalarType::Bytes)
+                FieldType::Scalar(ScalarType::I64 | ScalarType::U64 | ScalarType::Bytes)
                     | FieldType::Enum(_)
             ) =>
         {
@@ -294,7 +292,7 @@ fn write_serialize_variable<W: Write>(
             )?;
 
             match value_type.as_ref() {
-                FieldType::Scalar(ScalarType::I64) | FieldType::Scalar(ScalarType::U64) => {
+                FieldType::Scalar(ScalarType::I64 | ScalarType::U64) => {
                     writeln!(
                         writer,
                         "{}.map(|(k, v)| (k, v.to_string())).collect();",
@@ -631,7 +629,7 @@ fn write_deserialize_message<W: Write>(
                     field = field.rust_field_name()
                 )?;
             }
-            _ => {
+            FieldModifier::Optional => {
                 writeln!(
                     writer,
                     "{indent}{field}: {field}__,",
@@ -1005,16 +1003,13 @@ fn write_encode_scalar_field<W: Write>(
     field_modifier: FieldModifier,
     writer: &mut W,
 ) -> Result<()> {
-    let deserializer = match override_deserializer(scalar) {
-        Some(deserializer) => deserializer,
-        None => {
-            return match field_modifier {
-                FieldModifier::Optional => {
-                    write!(writer, "map_.next_value()?")
-                }
-                _ => write!(writer, "Some(map_.next_value()?)"),
-            };
-        }
+    let Some(deserializer) = override_deserializer(scalar) else {
+        return match field_modifier {
+            FieldModifier::Optional => {
+                write!(writer, "map_.next_value()?")
+            }
+            _ => write!(writer, "Some(map_.next_value()?)"),
+        };
     };
 
     writeln!(writer)?;
