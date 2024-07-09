@@ -1,6 +1,6 @@
 [package]
 name = "pbjson-build"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
 edition = "2021"
 description = "Generates Serialize and Deserialize implementations for prost message types"
