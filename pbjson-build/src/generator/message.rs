@@ -382,6 +382,11 @@ fn write_serialize_scalar_variable<W: Write>(
             )?;
             writeln!(
                 writer,
+                "{}#[allow(clippy::needless_borrows_for_generic_args)]",
+                Indent(indent)
+            )?;
+            writeln!(
+                writer,
                 "{}struct_ser.serialize_field(\"{}\", {}(&{}).as_str())?;",
                 Indent(indent),
                 field_name,
