@@ -11,7 +11,9 @@ use super::{
 use crate::descriptor::{EnumDescriptor, TypePath};
 use crate::generator::write_fields_array;
 use crate::resolver::Resolver;
+use heck::ToUpperCamelCase;
 use std::collections::HashSet;
+use itertools::Itertools;
 use std::io::{Result, Write};
 
 pub fn generate_enum<W: Write>(
@@ -20,6 +22,7 @@ pub fn generate_enum<W: Write>(
     descriptor: &EnumDescriptor,
     writer: &mut W,
     use_integers_for_enums: bool,
+    support_camel_case_for_enum_deserialization: bool,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(path);
 
@@ -74,7 +77,13 @@ pub fn generate_enum<W: Write>(
     // Generate Deserialize
     write_deserialize_start(0, &rust_type, writer)?;
     write_fields_array(writer, 2, variants.iter().map(|(name, _, _)| name.as_str()))?;
-    write_visitor(writer, 2, &rust_type, &variants)?;
+    write_visitor(
+        writer,
+        2,
+        &rust_type,
+        &variants,
+        support_camel_case_for_enum_deserialization,
+    )?;
 
     // Use deserialize_any to allow users to provide integers or strings
     writeln!(
@@ -92,6 +101,7 @@ fn write_visitor<W: Write>(
     indent: usize,
     rust_type: &str,
     variants: &[(String, i32, String)],
+    support_camel_case_for_enum_deserialization: bool,
 ) -> Result<()> {
     // Protobuf supports deserialization of enumerations both from string and integer values
     writeln!(
@@ -139,14 +149,22 @@ fn write_visitor<W: Write>(
 
     writeln!(writer, "{}match value {{", Indent(indent + 2))?;
     for (variant_name, _, rust_variant) in variants {
+        let mut variants = vec![variant_name.to_string()];
+        if support_camel_case_for_enum_deserialization {
+            let camel_case = variant_name.to_upper_camel_case();
+            variants.push(camel_case);
+            variants.dedup();
+        }
+        let variants = variants.into_iter().map(|variant| format!("\"{variant}\"")).join(" | ");
         writeln!(
             writer,
-            "{}\"{}\" => Ok({}::{}),",
+            "{}{} => Ok({}::{}),",
             Indent(indent + 3),
-            variant_name,
+            variants,
             rust_type,
             rust_variant
         )?;
+
     }
 
     writeln!(
