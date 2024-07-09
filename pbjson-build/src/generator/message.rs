@@ -262,7 +262,7 @@ fn write_serialize_variable<W: Write>(
                     writeln!(writer)?;
                     write!(
                         writer,
-                        "{}}}).collect::<Result<Vec<_>, _>>()",
+                        "{}}}).collect::<std::result::Result<Vec<_>, _>>()",
                         Indent(indent + 1)
                     )
                 }
@@ -316,7 +316,7 @@ fn write_serialize_variable<W: Write>(
                     writeln!(writer, "{}Ok((k, v))", Indent(indent + 2))?;
                     writeln!(
                         writer,
-                        "{}}}).collect::<Result<_,_>>()?;",
+                        "{}}}).collect::<std::result::Result<_,_>>()?;",
                         Indent(indent + 1)
                     )?;
                 }
