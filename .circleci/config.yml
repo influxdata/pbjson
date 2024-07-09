@@ -150,8 +150,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install protobuf and git
-          command: pacman -Sy --noconfirm protobuf git && protoc --version
+          name: Install protobuf and git and dependencies
+          command: pacman -Sy --noconfirm protobuf git gcc-libs && protoc --version
       - run:
           name: Regenerate descriptors
           working_directory: pbjson-types
