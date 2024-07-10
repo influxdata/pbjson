@@ -26,7 +26,7 @@ pub enum ScalarType {
 }
 
 impl ScalarType {
-    pub fn rust_type(&self) -> &'static str {
+    pub fn rust_type(self) -> &'static str {
         match self {
             Self::F64 => "f64",
             Self::F32 => "f32",
@@ -40,7 +40,7 @@ impl ScalarType {
         }
     }
 
-    pub fn is_numeric(&self) -> bool {
+    pub fn is_numeric(self) -> bool {
         matches!(
             self,
             Self::F64 | Self::F32 | Self::I32 | Self::I64 | Self::U32 | Self::U64
@@ -65,7 +65,7 @@ pub enum FieldModifier {
 }
 
 impl FieldModifier {
-    pub fn is_required(&self) -> bool {
+    pub fn is_required(self) -> bool {
         matches!(self, Self::Required)
     }
 }
@@ -167,7 +167,7 @@ pub fn resolve_message(
             let name = descriptor.name.clone().expect("oneof with no name");
             let path = message.path.child(TypeName::new(&name));
 
-            one_ofs.push(OneOf { name, path, fields })
+            one_ofs.push(OneOf { name, path, fields });
         }
     }
 
@@ -254,9 +254,8 @@ fn resolve_type(descriptors: &DescriptorSet, type_name: &str) -> FieldType {
                 assert_eq!("key", key.name());
                 assert_eq!("value", value.name());
 
-                let key_type = match field_type(descriptors, key) {
-                    FieldType::Scalar(scalar) => scalar,
-                    _ => panic!("non scalar map key"),
+                let FieldType::Scalar(key_type) = field_type(descriptors, key) else {
+                    panic!("non scalar map key");
                 };
                 let value_type = field_type(descriptors, value);
                 FieldType::Map(key_type, Box::new(value_type))
