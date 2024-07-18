@@ -1,6 +1,6 @@
 [package]
 name = "pbjson"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
 edition = "2021"
 description = "Utilities for pbjson conversion"
