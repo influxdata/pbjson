@@ -262,7 +262,7 @@ fn write_serialize_variable<W: Write>(
                     writeln!(writer)?;
                     write!(
                         writer,
-                        "{}}}).collect::<Result<Vec<_>, _>>()",
+                        "{}}}).collect::<std::result::Result<Vec<_>, _>>()",
                         Indent(indent + 1)
                     )
                 }
@@ -316,7 +316,7 @@ fn write_serialize_variable<W: Write>(
                     writeln!(writer, "{}Ok((k, v))", Indent(indent + 2))?;
                     writeln!(
                         writer,
-                        "{}}}).collect::<Result<_,_>>()?;",
+                        "{}}}).collect::<std::result::Result<_,_>>()?;",
                         Indent(indent + 1)
                     )?;
                 }
@@ -378,6 +378,11 @@ fn write_serialize_scalar_variable<W: Write>(
             writeln!(
                 writer,
                 "{}#[allow(clippy::needless_borrow)]",
+                Indent(indent)
+            )?;
+            writeln!(
+                writer,
+                "{}#[allow(clippy::needless_borrows_for_generic_args)]",
                 Indent(indent)
             )?;
             writeln!(
