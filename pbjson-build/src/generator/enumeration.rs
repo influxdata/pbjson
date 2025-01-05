@@ -98,7 +98,7 @@ fn write_visitor<W: Write>(
         writer,
         r#"{indent}struct GeneratedVisitor;
 
-{indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+{indent}impl serde::de::Visitor<'_> for GeneratedVisitor {{
 {indent}    type Value = {rust_type};
 
 {indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
