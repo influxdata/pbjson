@@ -64,7 +64,7 @@ impl<'a> Resolver<'a> {
 
                 let mut ret = String::new();
                 for _ in 0..super_count {
-                    ret.push_str("super::")
+                    ret.push_str("super::");
                 }
 
                 (ret, shared_prefix)
