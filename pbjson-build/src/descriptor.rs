@@ -133,9 +133,8 @@ impl TypePath {
 
     /// Performs a prefix match, returning the length of the match in path segments if any
     pub fn prefix_match(&self, prefix: &str) -> Option<usize> {
-        let prefix = match prefix.strip_prefix('.') {
-            Some(prefix) => prefix,
-            None => panic!("prefix must start with a '.'"),
+        let Some(prefix) = prefix.strip_prefix('.') else {
+            panic!("prefix must start with a '.'");
         };
 
         if prefix.is_empty() {
@@ -183,11 +182,11 @@ impl DescriptorSet {
         let path = TypePath::new(package);
 
         for descriptor in file.message_type {
-            self.register_message(&path, descriptor, syntax)
+            self.register_message(&path, descriptor, syntax);
         }
 
         for descriptor in file.enum_type {
-            self.register_enum(&path, descriptor)
+            self.register_enum(&path, descriptor);
         }
     }
 
@@ -200,11 +199,11 @@ impl DescriptorSet {
         let child_path = path.child(name);
 
         for child_descriptor in descriptor.enum_type {
-            self.register_enum(&child_path, child_descriptor)
+            self.register_enum(&child_path, child_descriptor);
         }
 
         for child_descriptor in descriptor.nested_type {
-            self.register_message(&child_path, child_descriptor, syntax)
+            self.register_message(&child_path, child_descriptor, syntax);
         }
 
         self.register_descriptor(
