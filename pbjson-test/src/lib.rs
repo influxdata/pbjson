@@ -189,6 +189,33 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "ignore-unknown-enum-variants")]
+    fn test_ignore_unknown_enum_variant() {
+        // A known string still maps correctly.
+        let kitchen_sink =
+            serde_json::from_str::<KitchenSink>("{\n \"value\": \"VALUE_A\"\n}").unwrap();
+        assert!(matches!(kitchen_sink, KitchenSink { value: 45, .. }));
+
+        // A known integer still maps correctly.
+        let kitchen_sink = serde_json::from_str::<KitchenSink>("{\n \"value\": 63\n}").unwrap();
+        assert!(matches!(kitchen_sink, KitchenSink { value: 63, .. }));
+
+        // An unknown string maps to default.
+        let kitchen_sink =
+            serde_json::from_str::<KitchenSink>("{\n \"value\": \"VALUE_DOES_NOT_EXIST\"\n}")
+                .unwrap();
+        assert!(matches!(kitchen_sink, KitchenSink { value: 0, .. }));
+
+        // An unknown integer maps to default.
+        let kitchen_sink = serde_json::from_str::<KitchenSink>("{\n \"value\": 1337\n}").unwrap();
+        assert!(matches!(kitchen_sink, KitchenSink { value: 0, .. }));
+
+        // Numeric values that don't fit in an i32 should still error.
+        assert!(serde_json::from_str::<KitchenSink>("{\n \"value\": 5.6\n}").is_err());
+        assert!(serde_json::from_str::<KitchenSink>("{\n \"value\": 3000000000\n}").is_err());
+    }
+
+    #[test]
     #[cfg(feature = "btree")]
     fn test_btree() {
         use std::collections::BTreeMap;
