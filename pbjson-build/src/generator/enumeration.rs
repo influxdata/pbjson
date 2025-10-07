@@ -98,7 +98,7 @@ fn write_visitor<W: Write>(
         writer,
         r#"{indent}struct GeneratedVisitor;
 
-{indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+{indent}impl<'de> serde_core::de::Visitor<'de> for GeneratedVisitor {{
 {indent}    type Value = {rust_type};
 
 {indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
@@ -107,31 +107,31 @@ fn write_visitor<W: Write>(
 
 {indent}    fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
 {indent}    where
-{indent}        E: serde::de::Error,
+{indent}        E: serde_core::de::Error,
 {indent}    {{
 {indent}        i32::try_from(v)
 {indent}            .ok()
 {indent}            .and_then(|x| x.try_into().ok())
 {indent}            .ok_or_else(|| {{
-{indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
+{indent}                serde_core::de::Error::invalid_value(serde_core::de::Unexpected::Signed(v), &self)
 {indent}            }})
 {indent}    }}
 
 {indent}    fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
 {indent}    where
-{indent}        E: serde::de::Error,
+{indent}        E: serde_core::de::Error,
 {indent}    {{
 {indent}        i32::try_from(v)
 {indent}            .ok()
 {indent}            .and_then(|x| x.try_into().ok())
 {indent}            .ok_or_else(|| {{
-{indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
+{indent}                serde_core::de::Error::invalid_value(serde_core::de::Unexpected::Unsigned(v), &self)
 {indent}            }})
 {indent}    }}
 
 {indent}    fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
 {indent}    where
-{indent}        E: serde::de::Error,
+{indent}        E: serde_core::de::Error,
 {indent}    {{"#,
         indent = Indent(indent),
         rust_type = rust_type,
@@ -151,7 +151,7 @@ fn write_visitor<W: Write>(
 
     writeln!(
         writer,
-        "{indent}_ => Err(serde::de::Error::unknown_variant(value, FIELDS)),",
+        "{indent}_ => Err(serde_core::de::Error::unknown_variant(value, FIELDS)),",
         indent = Indent(indent + 3)
     )?;
     writeln!(writer, "{}}}", Indent(indent + 2))?;

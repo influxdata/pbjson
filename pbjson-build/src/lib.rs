@@ -1,5 +1,5 @@
 //! `pbjson-build` consumes the descriptor output of [`prost-build`][1] and generates
-//! [`serde::Serialize`][2] and [`serde::Deserialize`][3] implementations
+//! [`serde_core::Serialize`][2] and [`serde_core::Deserialize`][3] implementations
 //! that are compliant with the [protobuf JSON mapping][4]
 //!
 //! # Usage
@@ -63,11 +63,11 @@
 //! ```
 //!
 //! The module will now contain the generated prost structs for your protobuf definition
-//! along with compliant implementations of [serde::Serialize][2] and [serde::Deserialize][3]
+//! along with compliant implementations of [serde_core::Serialize][2] and [serde_core::Deserialize][3]
 //!
 //! [1]: https://docs.rs/prost-build
-//! [2]: https://docs.rs/serde/1.0.130/serde/trait.Serialize.html
-//! [3]: https://docs.rs/serde/1.0.130/serde/trait.Deserialize.html
+//! [2]: https://docs.rs/serde_core/1.0.228/serde_core/trait.Serialize.html
+//! [3]: https://docs.rs/serde_core/1.0.228/serde_core/trait.Deserialize.html
 //! [4]: https://developers.google.com/protocol-buffers/docs/proto3#json
 
 #![deny(rustdoc::broken_intra_doc_links, rustdoc::bare_urls, rust_2018_idioms)]

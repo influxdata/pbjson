@@ -36,19 +36,19 @@ impl FromIterator<crate::Value> for ListValue {
     }
 }
 
-impl serde::Serialize for ListValue {
+impl serde_core::Serialize for ListValue {
     fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer,
+        S: serde_core::Serializer,
     {
         self.values.serialize(ser)
     }
 }
 
-impl<'de> serde::Deserialize<'de> for ListValue {
+impl<'de> serde_core::Deserialize<'de> for ListValue {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: serde_core::Deserializer<'de>,
     {
         deserializer.deserialize_seq(ListValueVisitor)
     }
@@ -56,7 +56,7 @@ impl<'de> serde::Deserialize<'de> for ListValue {
 
 struct ListValueVisitor;
 
-impl<'de> serde::de::Visitor<'de> for ListValueVisitor {
+impl<'de> serde_core::de::Visitor<'de> for ListValueVisitor {
     type Value = ListValue;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -65,7 +65,7 @@ impl<'de> serde::de::Visitor<'de> for ListValueVisitor {
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
     where
-        A: serde::de::SeqAccess<'de>,
+        A: serde_core::de::SeqAccess<'de>,
     {
         let mut list = Vec::new();
 

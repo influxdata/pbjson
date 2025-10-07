@@ -1,5 +1,5 @@
-//! `pbjson` is a set of crates to automatically generate [`serde::Serialize`] and
-//! [`serde::Deserialize`] implementations for [prost][1] generated structs that
+//! `pbjson` is a set of crates to automatically generate [`serde_core::Serialize`] and
+//! [`serde_core::Deserialize`] implementations for [prost][1] generated structs that
 //! are compliant with the [protobuf JSON mapping][2]
 //!
 //! See [pbjson-build][3] for usage instructions
@@ -25,8 +25,8 @@ pub mod private {
     use base64::engine::DecodePaddingMode;
     use base64::engine::{GeneralPurpose, GeneralPurposeConfig};
     use base64::Engine;
-    use serde::de::Visitor;
-    use serde::Deserialize;
+    use serde_core::de::Visitor;
+    use serde_core::Deserialize;
     use std::borrow::Cow;
     use std::str::FromStr;
 
@@ -34,7 +34,7 @@ pub mod private {
     #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Hash, Ord, Eq)]
     pub struct NumberDeserialize<T>(pub T);
 
-    #[derive(Deserialize)]
+    #[derive(serde::Deserialize)]
     #[serde(untagged)]
     enum Content<'a, T> {
         #[serde(borrow)]
@@ -42,18 +42,18 @@ pub mod private {
         Number(T),
     }
 
-    impl<'de, T> serde::Deserialize<'de> for NumberDeserialize<T>
+    impl<'de, T> Deserialize<'de> for NumberDeserialize<T>
     where
-        T: FromStr + serde::Deserialize<'de>,
+        T: FromStr + Deserialize<'de>,
         <T as FromStr>::Err: std::error::Error,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
-            D: serde::Deserializer<'de>,
+            D: serde_core::Deserializer<'de>,
         {
             let content = Content::deserialize(deserializer)?;
             Ok(Self(match content {
-                Content::Str(v) => v.parse().map_err(serde::de::Error::custom)?,
+                Content::Str(v) => v.parse().map_err(serde_core::de::Error::custom)?,
                 Content::Number(v) => v,
             }))
         }
@@ -70,7 +70,7 @@ pub mod private {
 
         fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
         where
-            E: serde::de::Error,
+            E: serde_core::de::Error,
         {
             const INDIFFERENT_PAD: GeneralPurposeConfig = GeneralPurposeConfig::new()
                 .with_decode_padding_mode(DecodePaddingMode::Indifferent);
@@ -93,7 +93,7 @@ pub mod private {
                     }
                     _ => Err(e),
                 })
-                .map_err(serde::de::Error::custom)?;
+                .map_err(serde_core::de::Error::custom)?;
             Ok(decoded)
         }
     }
@@ -107,7 +107,7 @@ pub mod private {
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
-            D: serde::Deserializer<'de>,
+            D: serde_core::Deserializer<'de>,
         {
             Ok(Self(deserializer.deserialize_str(Base64Visitor)?.into()))
         }
@@ -119,7 +119,7 @@ pub mod private {
         use base64::Engine;
         use bytes::Bytes;
         use rand::prelude::*;
-        use serde::de::value::{BorrowedStrDeserializer, Error};
+        use serde_core::de::value::{BorrowedStrDeserializer, Error};
 
         #[test]
         fn test_bytes() {

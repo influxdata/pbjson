@@ -2,10 +2,10 @@ use prost::bytes::Bytes;
 
 macro_rules! ser_scalar_value {
     ($typ: ty) => {
-        impl serde::Serialize for $typ {
+        impl serde_core::Serialize for $typ {
             fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
             where
-                S: serde::Serializer,
+                S: serde_core::Serializer,
             {
                 self.value.serialize(ser)
             }
@@ -14,12 +14,12 @@ macro_rules! ser_scalar_value {
 }
 macro_rules! deser_scalar_value {
     ($typ: ty) => {
-        impl<'de> serde::Deserialize<'de> for $typ {
+        impl<'de> serde_core::Deserialize<'de> for $typ {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde::Deserializer<'de>,
+                D: serde_core::Deserializer<'de>,
             {
-                let value = serde::Deserialize::deserialize(deserializer)?;
+                let value = serde_core::Deserialize::deserialize(deserializer)?;
                 Ok(Self { value })
             }
         }
@@ -27,10 +27,10 @@ macro_rules! deser_scalar_value {
 }
 macro_rules! ser_bytes_value {
     ($typ: ty) => {
-        impl serde::Serialize for $typ {
+        impl serde_core::Serialize for $typ {
             fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
             where
-                S: serde::Serializer,
+                S: serde_core::Serializer,
             {
                 use pbjson::private::base64::engine::Engine;
                 let value =
@@ -42,10 +42,10 @@ macro_rules! ser_bytes_value {
 }
 macro_rules! deser_bytes_value {
     ($typ: ty) => {
-        impl<'de> serde::Deserialize<'de> for $typ {
+        impl<'de> serde_core::Deserialize<'de> for $typ {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde::Deserializer<'de>,
+                D: serde_core::Deserializer<'de>,
             {
                 let value = pbjson::private::BytesDeserialize::deserialize(deserializer)?.0;
                 Ok(Self { value })
@@ -55,10 +55,10 @@ macro_rules! deser_bytes_value {
 }
 macro_rules! ser_long_value {
     ($typ: ty) => {
-        impl serde::Serialize for $typ {
+        impl serde_core::Serialize for $typ {
             fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
             where
-                S: serde::Serializer,
+                S: serde_core::Serializer,
             {
                 let value = self.value.to_string();
                 value.serialize(ser)
@@ -68,10 +68,10 @@ macro_rules! ser_long_value {
 }
 macro_rules! deser_number_value {
     ($typ: ty) => {
-        impl<'de> serde::Deserialize<'de> for $typ {
+        impl<'de> serde_core::Deserialize<'de> for $typ {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde::Deserializer<'de>,
+                D: serde_core::Deserializer<'de>,
             {
                 let value = pbjson::private::NumberDeserialize::deserialize(deserializer)?.0;
                 Ok(Self { value })

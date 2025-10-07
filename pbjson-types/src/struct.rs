@@ -17,19 +17,19 @@ impl FromIterator<(String, crate::Value)> for Struct {
     }
 }
 
-impl serde::Serialize for Struct {
+impl serde_core::Serialize for Struct {
     fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer,
+        S: serde_core::Serializer,
     {
         self.fields.serialize(ser)
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Struct {
+impl<'de> serde_core::Deserialize<'de> for Struct {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: serde_core::Deserializer<'de>,
     {
         deserializer.deserialize_map(StructVisitor)
     }
@@ -37,7 +37,7 @@ impl<'de> serde::Deserialize<'de> for Struct {
 
 struct StructVisitor;
 
-impl<'de> serde::de::Visitor<'de> for StructVisitor {
+impl<'de> serde_core::de::Visitor<'de> for StructVisitor {
     type Value = Struct;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -46,7 +46,7 @@ impl<'de> serde::de::Visitor<'de> for StructVisitor {
 
     fn visit_map<A>(self, mut map_access: A) -> Result<Self::Value, A::Error>
     where
-        A: serde::de::MapAccess<'de>,
+        A: serde_core::de::MapAccess<'de>,
     {
         let mut map = std::collections::HashMap::new();
 

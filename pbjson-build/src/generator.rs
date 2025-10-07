@@ -37,11 +37,11 @@ fn write_fields_array<'a, W: Write, I: Iterator<Item = &'a str>>(
 fn write_serialize_start<W: Write>(indent: usize, rust_type: &str, writer: &mut W) -> Result<()> {
     writeln!(
         writer,
-        r#"{indent}impl serde::Serialize for {rust_type} {{
+        r#"{indent}impl serde_core::Serialize for {rust_type} {{
 {indent}    #[allow(deprecated)]
 {indent}    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
 {indent}    where
-{indent}        S: serde::Serializer,
+{indent}        S: serde_core::Serializer,
 {indent}    {{"#,
         indent = Indent(indent),
         rust_type = rust_type
@@ -60,11 +60,11 @@ fn write_serialize_end<W: Write>(indent: usize, writer: &mut W) -> Result<()> {
 fn write_deserialize_start<W: Write>(indent: usize, rust_type: &str, writer: &mut W) -> Result<()> {
     writeln!(
         writer,
-        r#"{indent}impl<'de> serde::Deserialize<'de> for {rust_type} {{
+        r#"{indent}impl<'de> serde_core::Deserialize<'de> for {rust_type} {{
 {indent}    #[allow(deprecated)]
 {indent}    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
 {indent}    where
-{indent}        D: serde::Deserializer<'de>,
+{indent}        D: serde_core::Deserializer<'de>,
 {indent}    {{"#,
         indent = Indent(indent),
         rust_type = rust_type

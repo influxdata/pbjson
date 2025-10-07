@@ -1,12 +1,12 @@
 //! `pbjson-types` provides the `google.protobuf` types, commonly known as well-known-types,
-//! with [`serde::Serialize`][1] and [`serde::Deserialize`][2] implementations
+//! with [`serde_core::Serialize`][1] and [`serde_core::Deserialize`][2] implementations
 //! that are compliant with the [protobuf JSON mapping][3]
 //!
 //! __Note: Coverage of all types is currently incomplete,
 //! some may have non-compliant implementations__
 //!
-//! [1]: https://docs.rs/serde/1.0.130/serde/trait.Serialize.html
-//! [2]: https://docs.rs/serde/1.0.130/serde/trait.Deserialize.html
+//! [1]: https://docs.rs/serde_core/1.0.228/serde_core/trait.Serialize.html
+//! [2]: https://docs.rs/serde_core/1.0.228/serde_core/trait.Deserialize.html
 //! [3]: https://developers.google.com/protocol-buffers/docs/proto3#json
 
 #![deny(rustdoc::broken_intra_doc_links, rustdoc::bare_urls, rust_2018_idioms)]

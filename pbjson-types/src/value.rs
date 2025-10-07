@@ -1,6 +1,6 @@
 pub use crate::pb::google::protobuf::value::Kind;
 
-use serde::{
+use serde_core::{
     de::{self, MapAccess, SeqAccess},
     ser, Deserialize, Deserializer, Serialize, Serializer,
 };
@@ -113,7 +113,7 @@ impl<'de> Deserialize<'de> for Kind {
 
 struct KindVisitor;
 
-impl<'de> serde::de::Visitor<'de> for KindVisitor {
+impl<'de> serde_core::de::Visitor<'de> for KindVisitor {
     type Value = Kind;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

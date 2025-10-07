@@ -1,6 +1,6 @@
 use crate::Duration;
-use serde::de::Visitor;
-use serde::Serialize;
+use serde_core::de::Visitor;
+use serde_core::Serialize;
 
 impl TryFrom<Duration> for std::time::Duration {
     type Error = std::num::TryFromIntError;
@@ -25,10 +25,12 @@ impl From<std::time::Duration> for Duration {
 impl Serialize for Duration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer,
+        S: serde_core::Serializer,
     {
         if self.seconds != 0 && self.nanos != 0 && (self.nanos < 0) != (self.seconds < 0) {
-            return Err(serde::ser::Error::custom("Duration has inconsistent signs"));
+            return Err(serde_core::ser::Error::custom(
+                "Duration has inconsistent signs",
+            ));
         }
 
         let mut s = if self.seconds == 0 {
@@ -67,11 +69,11 @@ impl<'de> Visitor<'de> for DurationVisitor {
 
     fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
     where
-        E: serde::de::Error,
+        E: serde_core::de::Error,
     {
         let s = s
             .strip_suffix('s')
-            .ok_or_else(|| serde::de::Error::custom("missing 's' suffix"))?;
+            .ok_or_else(|| serde_core::de::Error::custom("missing 's' suffix"))?;
 
         let (negative, s) = match s.strip_prefix('-') {
             Some(s) => (true, s),
@@ -82,11 +84,11 @@ impl<'de> Visitor<'de> for DurationVisitor {
             Some((seconds_str, decimal_str)) => {
                 let exp = 9_u32
                     .checked_sub(decimal_str.len() as u32)
-                    .ok_or_else(|| serde::de::Error::custom("too many decimal places"))?;
+                    .ok_or_else(|| serde_core::de::Error::custom("too many decimal places"))?;
 
                 let pow = 10_u32.pow(exp);
-                let seconds = seconds_str.parse().map_err(serde::de::Error::custom)?;
-                let decimal: u32 = decimal_str.parse().map_err(serde::de::Error::custom)?;
+                let seconds = seconds_str.parse().map_err(serde_core::de::Error::custom)?;
+                let decimal: u32 = decimal_str.parse().map_err(serde_core::de::Error::custom)?;
 
                 Duration {
                     seconds,
@@ -94,7 +96,7 @@ impl<'de> Visitor<'de> for DurationVisitor {
                 }
             }
             None => Duration {
-                seconds: s.parse().map_err(serde::de::Error::custom)?,
+                seconds: s.parse().map_err(serde_core::de::Error::custom)?,
                 nanos: 0,
             },
         };
@@ -109,10 +111,10 @@ impl<'de> Visitor<'de> for DurationVisitor {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Duration {
+impl<'de> serde_core::Deserialize<'de> for Duration {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: serde_core::Deserializer<'de>,
     {
         deserializer.deserialize_str(DurationVisitor)
     }

@@ -15,7 +15,7 @@ bytes = "1.0"
 chrono = { version = "0.4", default-features = false, features = ["alloc"] }
 pbjson = { path = "../pbjson", version = "0.8" }
 prost = "0.14"
-serde = { version = "1.0", features = ["derive"] }
+serde_core = { version = "1.0.200" }
 
 [dev-dependencies]
 serde_json = "1.0"

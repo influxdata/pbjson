@@ -1,7 +1,7 @@
 use crate::Timestamp;
 use chrono::{DateTime, Utc};
-use serde::de::Visitor;
-use serde::Serialize;
+use serde_core::de::Visitor;
+use serde_core::Serialize;
 
 impl TryFrom<Timestamp> for DateTime<Utc> {
     type Error = &'static str;
@@ -30,9 +30,9 @@ impl From<DateTime<Utc>> for Timestamp {
 impl Serialize for Timestamp {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer,
+        S: serde_core::Serializer,
     {
-        let t: DateTime<Utc> = (*self).try_into().map_err(serde::ser::Error::custom)?;
+        let t: DateTime<Utc> = (*self).try_into().map_err(serde_core::ser::Error::custom)?;
         serializer.serialize_str(t.to_rfc3339().as_str())
     }
 }
@@ -48,18 +48,18 @@ impl<'de> Visitor<'de> for TimestampVisitor {
 
     fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
     where
-        E: serde::de::Error,
+        E: serde_core::de::Error,
     {
-        let d = DateTime::parse_from_rfc3339(s).map_err(serde::de::Error::custom)?;
+        let d = DateTime::parse_from_rfc3339(s).map_err(serde_core::de::Error::custom)?;
         let d: DateTime<Utc> = d.into();
         Ok(d.into())
     }
 }
 
-impl<'de> serde::Deserialize<'de> for Timestamp {
+impl<'de> serde_core::Deserialize<'de> for Timestamp {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: serde_core::Deserializer<'de>,
     {
         deserializer.deserialize_str(TimestampVisitor)
     }
@@ -69,8 +69,8 @@ impl<'de> serde::Deserialize<'de> for Timestamp {
 mod tests {
     use super::*;
     use chrono::{FixedOffset, TimeZone};
-    use serde::de::value::{BorrowedStrDeserializer, Error};
-    use serde::Deserialize;
+    use serde_core::de::value::{BorrowedStrDeserializer, Error};
+    use serde_core::Deserialize;
 
     #[test]
     fn test_date() {

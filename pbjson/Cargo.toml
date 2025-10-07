@@ -12,6 +12,7 @@ repository = "https://github.com/influxdata/pbjson"
 [dependencies]
 
 serde = { version = "1.0", features = ["derive"] }
+serde_core = { version = "1.0.200" }
 base64 = "0.22"
 
 [dev-dependencies]
