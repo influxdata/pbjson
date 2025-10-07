@@ -143,7 +143,11 @@ fn write_struct_serialize_start<W: Write>(
     writer: &mut W,
     emit_fields: bool,
 ) -> Result<()> {
-    writeln!(writer, "{}use serde::ser::SerializeStruct;", Indent(indent))?;
+    writeln!(
+        writer,
+        "{}use serde_core::ser::SerializeStruct;",
+        Indent(indent)
+    )?;
 
     let required_len = message
         .fields
@@ -211,7 +215,7 @@ fn write_decode_variant<W: Write>(
     writeln!(writer, "{}::try_from({})", resolver.rust_type(path), value)?;
     write!(
         writer,
-        "{}.map_err(|_| serde::ser::Error::custom(format!(\"Invalid variant {{}}\", {})))",
+        "{}.map_err(|_| serde_core::ser::Error::custom(format!(\"Invalid variant {{}}\", {})))",
         Indent(indent),
         value
     )
@@ -521,7 +525,7 @@ fn write_deserialize_message<W: Write>(
 
     writeln!(
         writer,
-        r#"{indent}impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+        r#"{indent}impl<'de> serde_core::de::Visitor<'de> for GeneratedVisitor {{
 {indent}    type Value = {rust_type};
 
 {indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
@@ -530,7 +534,7 @@ fn write_deserialize_message<W: Write>(
 
 {indent}    fn visit_map<V>(self, mut map_: V) -> std::result::Result<{rust_type}, V::Error>
 {indent}        where
-{indent}            V: serde::de::MapAccess<'de>,
+{indent}            V: serde_core::de::MapAccess<'de>,
 {indent}    {{"#,
         indent = Indent(indent),
         name = message.path,
@@ -593,7 +597,7 @@ fn write_deserialize_message<W: Write>(
             )?;
             writeln!(
                 writer,
-                "{}let _ = map_.next_value::<serde::de::IgnoredAny>()?;",
+                "{}let _ = map_.next_value::<serde_core::de::IgnoredAny>()?;",
                 Indent(indent + 5),
             )?;
             writeln!(writer, "{}}}", Indent(indent + 4))?;
@@ -609,7 +613,7 @@ fn write_deserialize_message<W: Write>(
         )?;
         writeln!(
             writer,
-            "{}let _ = map_.next_value::<serde::de::IgnoredAny>()?;",
+            "{}let _ = map_.next_value::<serde_core::de::IgnoredAny>()?;",
             Indent(indent + 3)
         )?;
         writeln!(writer, "{}}}", Indent(indent + 2))?;
@@ -621,7 +625,7 @@ fn write_deserialize_message<W: Write>(
             FieldModifier::Required => {
                 writeln!(
                     writer,
-                    "{indent}{field}: {field}__.ok_or_else(|| serde::de::Error::missing_field(\"{json_name}\"))?,",
+                    "{indent}{field}: {field}__.ok_or_else(|| serde_core::de::Error::missing_field(\"{json_name}\"))?,",
                     indent = Indent(indent + 3),
                     field = field.rust_field_name(),
                     json_name = field.json_name()
@@ -699,14 +703,14 @@ fn write_deserialize_field_name<W: Write>(
 
     writeln!(
         writer,
-        r#"{indent}impl<'de> serde::Deserialize<'de> for GeneratedField {{
+        r#"{indent}impl<'de> serde_core::Deserialize<'de> for GeneratedField {{
 {indent}    fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
 {indent}    where
-{indent}        D: serde::Deserializer<'de>,
+{indent}        D: serde_core::Deserializer<'de>,
 {indent}    {{
 {indent}        struct GeneratedVisitor;
 
-{indent}        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {{
+{indent}        impl<'de> serde_core::de::Visitor<'de> for GeneratedVisitor {{
 {indent}            type Value = GeneratedField;
 
 {indent}            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
@@ -716,7 +720,7 @@ fn write_deserialize_field_name<W: Write>(
 {indent}            #[allow(unused_variables)]
 {indent}            fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
 {indent}            where
-{indent}                E: serde::de::Error,
+{indent}                E: serde_core::de::Error,
 {indent}            {{"#,
         indent = Indent(indent)
     )?;
@@ -752,7 +756,7 @@ fn write_deserialize_field_name<W: Write>(
         } else {
             writeln!(
                 writer,
-                "{}_ => Err(serde::de::Error::unknown_field(value, FIELDS)),",
+                "{}_ => Err(serde_core::de::Error::unknown_field(value, FIELDS)),",
                 Indent(indent + 5)
             )?;
         }
@@ -766,7 +770,7 @@ fn write_deserialize_field_name<W: Write>(
     } else {
         writeln!(
             writer,
-            "{}Err(serde::de::Error::unknown_field(value, FIELDS))",
+            "{}Err(serde_core::de::Error::unknown_field(value, FIELDS))",
             Indent(indent + 5)
         )?;
     }
@@ -840,7 +844,7 @@ fn write_deserialize_field<W: Write>(
     // Note: this will report duplicate field if multiple value are specified for a one of
     writeln!(
         writer,
-        "{}return Err(serde::de::Error::duplicate_field(\"{}\"));",
+        "{}return Err(serde_core::de::Error::duplicate_field(\"{}\"));",
         Indent(indent + 2),
         json_name
     )?;

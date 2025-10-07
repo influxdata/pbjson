@@ -6,19 +6,19 @@ impl From<()> for NullValue {
     }
 }
 
-impl serde::Serialize for NullValue {
+impl serde_core::Serialize for NullValue {
     fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer,
+        S: serde_core::Serializer,
     {
         ().serialize(ser)
     }
 }
 
-impl<'de> serde::Deserialize<'de> for NullValue {
+impl<'de> serde_core::Deserialize<'de> for NullValue {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>,
+        D: serde_core::Deserializer<'de>,
     {
         deserializer.deserialize_unit(NullValueVisitor)
     }
@@ -26,7 +26,7 @@ impl<'de> serde::Deserialize<'de> for NullValue {
 
 struct NullValueVisitor;
 
-impl<'de> serde::de::Visitor<'de> for NullValueVisitor {
+impl<'de> serde_core::de::Visitor<'de> for NullValueVisitor {
     type Value = NullValue;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -35,7 +35,7 @@ impl<'de> serde::de::Visitor<'de> for NullValueVisitor {
 
     fn visit_unit<E>(self) -> Result<Self::Value, E>
     where
-        E: serde::de::Error,
+        E: serde_core::de::Error,
     {
         Ok(NullValue::NullValue)
     }
