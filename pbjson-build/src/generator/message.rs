@@ -42,6 +42,7 @@ pub fn generate_message<W: Write>(
     btree_map_paths: &[String],
     emit_fields: bool,
     preserve_proto_field_names: bool,
+    unknown_field_storage_field: &Option<String>,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(&message.path);
 
@@ -67,6 +68,7 @@ pub fn generate_message<W: Write>(
         writer,
         ignore_unknown_fields,
         btree_map_paths,
+        unknown_field_storage_field,
     )?;
     write_deserialize_end(0, writer)?;
     Ok(())
@@ -514,6 +516,7 @@ fn write_deserialize_message<W: Write>(
     writer: &mut W,
     ignore_unknown_fields: bool,
     btree_map_paths: &[String],
+    unknown_field_storage_field: &Option<String>,
 ) -> Result<()> {
     write_deserialize_field_name(2, message, writer, ignore_unknown_fields)?;
 
@@ -652,6 +655,15 @@ fn write_deserialize_message<W: Write>(
             "{indent}{field}: {field}__,",
             indent = Indent(indent + 3),
             field = one_of.rust_field_name(),
+        )?;
+    }
+
+    if let Some(unknown_field_storage_field) = unknown_field_storage_field {
+        writeln!(
+            writer,
+            "{indent}{unknown_field_field}: Default::default(),",
+            indent = Indent(indent + 3),
+            unknown_field_field = unknown_field_storage_field
         )?;
     }
 
