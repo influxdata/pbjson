@@ -16,4 +16,4 @@ base64 = "0.22"
 
 [dev-dependencies]
 bytes = "1.0"
-rand = "0.8"
+rand = "0.9"
