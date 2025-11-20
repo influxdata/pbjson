@@ -1,6 +1,15 @@
 version: 2.1
 
 commands:
+  checkout_https:
+    description: Checkout code via HTTPS
+    steps:
+      - run:
+          name: Checkout code via HTTPS
+          command: |
+            git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git .
+            git checkout ${CIRCLE_SHA1}
+
   rust_components:
     description: Verify installed components
     steps:
@@ -41,7 +50,7 @@ jobs:
       # "1" means line tables only, which is useful for panic tracebacks.
       RUSTFLAGS: "-C debuginfo=1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -59,7 +68,7 @@ jobs:
       # "1" means line tables only, which is useful for panic tracebacks.
       RUSTFLAGS: "-C debuginfo=1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -77,7 +86,7 @@ jobs:
       # "1" means line tables only, which is useful for panic tracebacks.
       RUSTFLAGS: "-C debuginfo=1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -97,7 +106,7 @@ jobs:
       # "1" means line tables only, which is useful for panic tracebacks.
       RUSTFLAGS: "-C debuginfo=1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -121,7 +130,7 @@ jobs:
       RUSTFLAGS: "-C debuginfo=1"
       RUST_BACKTRACE: "1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -148,7 +157,7 @@ jobs:
     docker:
       - image: archlinux
     steps:
-      - checkout
+      - checkout_https
       - run:
           name: Install protobuf and git and dependencies
           command: pacman -Sy --noconfirm protobuf git gcc-libs && protoc --version
