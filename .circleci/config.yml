@@ -7,8 +7,14 @@ commands:
       - run:
           name: Checkout code via HTTPS
           command: |
-            git clone --no-checkout https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git .
-            git fetch origin ${CIRCLE_BRANCH}
+            git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git .
+            if [ -n "${CIRCLE_PR_USERNAME}" ] && [ -n "${CIRCLE_PR_REPONAME}" ]; then
+              # Fetch from fork for PR builds
+              git remote add fork https://github.com/${CIRCLE_PR_USERNAME}/${CIRCLE_PR_REPONAME}.git
+              git fetch fork
+            fi
+            # Fetch all branches and PRs from origin
+            git fetch origin +refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/origin/pr/* || true
             git checkout ${CIRCLE_SHA1}
 
   rust_components:
