@@ -164,10 +164,11 @@ jobs:
     docker:
       - image: archlinux
     steps:
-      - checkout_https
+      # Run first to install git
       - run:
           name: Install protobuf and git and dependencies
           command: pacman -Sy --noconfirm protobuf git gcc-libs && protoc --version
+      - checkout_https
       - run:
           name: Regenerate descriptors
           working_directory: pbjson-types
