@@ -30,7 +30,8 @@ fn main() -> Result<()> {
         .extern_path(".google.protobuf", "::pbjson_types")
         .extern_path(".test.external", "crate")
         .bytes([".test"])
-        .protoc_arg("--experimental_allow_proto3_optional");
+        .protoc_arg("--experimental_allow_proto3_optional")
+        .include_unknown_fields(".", Some("__unknown_fields"));
 
     if cfg!(feature = "btree") {
         prost_config.btree_map([".test"]);
@@ -67,6 +68,8 @@ fn main() -> Result<()> {
     if cfg!(feature = "preserve-proto-field-names") {
         builder.preserve_proto_field_names();
     }
+
+    builder.unknown_fields_storage_field("__unknown_fields");
 
     builder.build(&[".test"])?;
 

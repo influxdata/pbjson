@@ -109,7 +109,7 @@ pub struct Builder {
     use_integers_for_enums: bool,
     ignore_unknown_enum_variants: bool,
     preserve_proto_field_names: bool,
-    unknown_field_storage_field: Option<String>,
+    unknown_fields_storage_field: Option<String>,
 }
 
 impl Builder {
@@ -210,10 +210,8 @@ impl Builder {
 
     /// Store unknown fields in the specified field when constructing.
     /// This field is used when using prost generated code with unknown_field support
-    pub fn unknown_field_storage_field<S: Into<String>>(
-        &mut self, field_name: S,
-    ) -> &mut Self {
-        self.unknown_field_storage_field = Some(field_name.into());
+    pub fn unknown_fields_storage_field<S: Into<String>>(&mut self, field_name: S) -> &mut Self {
+        self.unknown_fields_storage_field = Some(field_name.into());
         self
     }
 
@@ -305,7 +303,7 @@ impl Builder {
                             &self.btree_map_paths,
                             self.emit_fields,
                             self.preserve_proto_field_names,
-                            &self.unknown_field_storage_field,
+                            &self.unknown_fields_storage_field,
                         )?
                     }
                 }

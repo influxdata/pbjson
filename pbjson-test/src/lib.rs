@@ -158,7 +158,9 @@ mod tests {
     #[test]
     #[cfg(not(feature = "ignore-unknown-fields"))]
     fn test_unknown_field_error() {
-        let message = Empty {};
+        let message = Empty {
+            ..Default::default()
+        };
 
         let encoded = serde_json::to_string(&message).unwrap();
         let _decoded: Empty = serde_json::from_str(&encoded).unwrap();
@@ -787,12 +789,17 @@ mod tests {
     fn test_escaped() -> Result<(), Box<dyn Error>> {
         use super::test::escape::{Abstract, Target, Type};
 
-        let r#type = Type { example: true };
+        let r#type = Type {
+            example: true,
+            ..Default::default()
+        };
         let r#abstract = Abstract {
             r#type: Some(r#type),
+            ..Default::default()
         };
         let target = Target {
             r#abstract: Some(r#abstract),
+            ..Default::default()
         };
 
         let encoded = serde_json::to_string(&target)?;
