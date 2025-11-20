@@ -80,7 +80,7 @@
 )]
 
 use prost_types::FileDescriptorProto;
-use std::io::{BufWriter, Error, ErrorKind, Result, Write};
+use std::io::{BufWriter, Error, Result, Write};
 use std::path::PathBuf;
 
 use crate::descriptor::{Descriptor, Package};
@@ -205,9 +205,7 @@ impl Builder {
     pub fn build<S: AsRef<str>>(&mut self, prefixes: &[S]) -> Result<()> {
         let mut output: PathBuf = self.out_dir.clone().map(Ok).unwrap_or_else(|| {
             std::env::var_os("OUT_DIR")
-                .ok_or_else(|| {
-                    Error::new(ErrorKind::Other, "OUT_DIR environment variable is not set")
-                })
+                .ok_or_else(|| Error::other("OUT_DIR environment variable is not set"))
                 .map(Into::into)
         })?;
         output.push("FILENAME");

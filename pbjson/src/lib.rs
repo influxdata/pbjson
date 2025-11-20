@@ -124,9 +124,11 @@ pub mod private {
         #[test]
         fn test_bytes() {
             for _ in 0..20 {
-                let mut rng = thread_rng();
-                let len = rng.gen_range(50..100);
-                let raw: Vec<_> = std::iter::from_fn(|| Some(rng.gen())).take(len).collect();
+                let mut rng = rand::rng();
+                let len = rng.random_range(50..100);
+                let raw: Vec<_> = std::iter::from_fn(|| Some(rng.random()))
+                    .take(len)
+                    .collect();
 
                 for config in [
                     base64::engine::general_purpose::STANDARD,

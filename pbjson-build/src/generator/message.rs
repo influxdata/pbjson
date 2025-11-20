@@ -89,7 +89,7 @@ fn write_field_empty_predicate<W: Write>(
         | (FieldType::Scalar(ScalarType::Bytes), FieldModifier::UseDefault) => {
             write!(writer, "!self.{}.is_empty()", member.rust_field_name())
         }
-        (_, FieldModifier::Optional) | (FieldType::Message(_), _) => {
+        (_, FieldModifier::Optional) | (FieldType::Message, _) => {
             write!(writer, "self.{}.is_some()", member.rust_field_name())
         }
         (FieldType::Scalar(ScalarType::F64), FieldModifier::UseDefault)
@@ -877,7 +877,7 @@ fn write_deserialize_field<W: Write>(
                     field.rust_type_name()
                 )?;
             }
-            FieldType::Message(_) => writeln!(
+            FieldType::Message => writeln!(
                 writer,
                 "map_.next_value::<::std::option::Option<_>>()?.map({}::{})",
                 resolver.rust_type(&one_of.path),
@@ -983,7 +983,7 @@ fn write_deserialize_field<W: Write>(
                 }
                 write!(writer, "{})", Indent(indent + 1))?;
             }
-            FieldType::Message(_) => match field.field_modifier {
+            FieldType::Message => match field.field_modifier {
                 FieldModifier::Repeated => {
                     // No explicit presence for repeated fields
                     write!(writer, "Some(map_.next_value()?)")?;

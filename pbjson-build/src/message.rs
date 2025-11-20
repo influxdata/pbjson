@@ -52,7 +52,7 @@ impl ScalarType {
 pub enum FieldType {
     Scalar(ScalarType),
     Enum(TypePath),
-    Message(TypePath),
+    Message,
     Map(ScalarType, Box<FieldType>),
 }
 
@@ -203,7 +203,7 @@ fn field_modifier(
         Label::Optional => match message.syntax {
             Syntax::Proto2 => FieldModifier::Optional,
             Syntax::Proto3 => match field_type {
-                FieldType::Message(_) => FieldModifier::Optional,
+                FieldType::Message => FieldModifier::Optional,
                 _ => FieldModifier::UseDefault,
             },
         },
@@ -245,7 +245,7 @@ fn resolve_type(descriptors: &DescriptorSet, type_name: &str) -> FieldType {
 
     match maybe_descriptor {
         Some((path, Descriptor::Enum(_))) => FieldType::Enum(path.clone()),
-        Some((path, Descriptor::Message(descriptor))) => match descriptor.is_map() {
+        Some((_path, Descriptor::Message(descriptor))) => match descriptor.is_map() {
             true => {
                 assert_eq!(descriptor.fields.len(), 2, "expected map to have 2 fields");
                 let key = &descriptor.fields[0];
@@ -263,7 +263,7 @@ fn resolve_type(descriptors: &DescriptorSet, type_name: &str) -> FieldType {
             }
             // Note: This may actually be a group but it is non-trivial to detect this,
             // they're deprecated, and pbjson doesn't need to be able to distinguish
-            false => FieldType::Message(path.clone()),
+            false => FieldType::Message,
         },
         None => panic!("failed to resolve type: {}", type_name),
     }
