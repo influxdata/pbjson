@@ -1,6 +1,22 @@
 version: 2.1
 
 commands:
+  checkout_https:
+    description: Checkout code via HTTPS
+    steps:
+      - run:
+          name: Checkout code via HTTPS
+          command: |
+            git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git .
+            if [ -n "${CIRCLE_PR_USERNAME}" ] && [ -n "${CIRCLE_PR_REPONAME}" ]; then
+              # Fetch from fork for PR builds
+              git remote add fork https://github.com/${CIRCLE_PR_USERNAME}/${CIRCLE_PR_REPONAME}.git
+              git fetch fork
+            fi
+            # Fetch all branches and PRs from origin
+            git fetch origin +refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/origin/pr/* || true
+            git checkout ${CIRCLE_SHA1}
+
   rust_components:
     description: Verify installed components
     steps:
@@ -41,7 +57,7 @@ jobs:
       # "1" means line tables only, which is useful for panic tracebacks.
       RUSTFLAGS: "-C debuginfo=1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -59,7 +75,7 @@ jobs:
       # "1" means line tables only, which is useful for panic tracebacks.
       RUSTFLAGS: "-C debuginfo=1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -77,7 +93,7 @@ jobs:
       # "1" means line tables only, which is useful for panic tracebacks.
       RUSTFLAGS: "-C debuginfo=1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -97,7 +113,7 @@ jobs:
       # "1" means line tables only, which is useful for panic tracebacks.
       RUSTFLAGS: "-C debuginfo=1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -121,7 +137,7 @@ jobs:
       RUSTFLAGS: "-C debuginfo=1"
       RUST_BACKTRACE: "1"
     steps:
-      - checkout
+      - checkout_https
       - rust_components
       - cache_restore
       - run:
@@ -148,10 +164,11 @@ jobs:
     docker:
       - image: archlinux
     steps:
-      - checkout
+      # Run first to install git
       - run:
           name: Install protobuf and git and dependencies
           command: pacman -Sy --noconfirm protobuf git gcc-libs && protoc --version
+      - checkout_https
       - run:
           name: Regenerate descriptors
           working_directory: pbjson-types
