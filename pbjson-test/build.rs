@@ -44,6 +44,10 @@ fn main() -> Result<()> {
         .register_descriptors(&descriptor_set)?
         .extern_path(".test.external", "crate");
 
+    if cfg!(feature = "ignore-unknown-enum-variants") {
+        builder.ignore_unknown_enum_variants();
+    }
+
     if cfg!(feature = "ignore-unknown-fields") {
         builder.ignore_unknown_fields();
     }

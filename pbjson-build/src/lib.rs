@@ -107,6 +107,7 @@ pub struct Builder {
     btree_map_paths: Vec<String>,
     emit_fields: bool,
     use_integers_for_enums: bool,
+    ignore_unknown_enum_variants: bool,
     preserve_proto_field_names: bool,
 }
 
@@ -193,6 +194,12 @@ impl Builder {
         self
     }
 
+    /// Ignore unknown enum variants, and instead return the enum default.
+    pub fn ignore_unknown_enum_variants(&mut self) -> &mut Self {
+        self.ignore_unknown_enum_variants = true;
+        self
+    }
+
     /// Output fields with their original names as defined in their proto schemas, instead of
     /// lowerCamelCase
     pub fn preserve_proto_field_names(&mut self) -> &mut Self {
@@ -276,6 +283,7 @@ impl Builder {
                     descriptor,
                     writer,
                     self.use_integers_for_enums,
+                    self.ignore_unknown_enum_variants,
                 )?,
                 Descriptor::Message(descriptor) => {
                     if let Some(message) = resolve_message(&self.descriptors, descriptor) {
