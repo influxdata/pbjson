@@ -14,7 +14,7 @@ exclude = ["protos/*"]
 bytes = "1.0"
 chrono = { version = "0.4", default-features = false, features = ["alloc"] }
 pbjson = { path = "../pbjson", version = "0.8" }
-prost = "0.14"
+prost = { git = "https://github.com/blizzardfinnegan/prost.git", rev = "8579f8b" }
 serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]

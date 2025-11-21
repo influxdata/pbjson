@@ -108,6 +108,7 @@ pub struct Builder {
     emit_fields: bool,
     use_integers_for_enums: bool,
     preserve_proto_field_names: bool,
+    unknown_fields_storage_field: Option<String>,
 }
 
 impl Builder {
@@ -200,6 +201,13 @@ impl Builder {
         self
     }
 
+    /// Store unknown fields in the specified field when constructing.
+    /// This field is used when using prost generated code with unknown_field support
+    pub fn unknown_fields_storage_field<S: Into<String>>(&mut self, field_name: S) -> &mut Self {
+        self.unknown_fields_storage_field = Some(field_name.into());
+        self
+    }
+
     /// Generates code for all registered types where `prefixes` contains a prefix of
     /// the fully-qualified path of the type
     pub fn build<S: AsRef<str>>(&mut self, prefixes: &[S]) -> Result<()> {
@@ -287,6 +295,7 @@ impl Builder {
                             &self.btree_map_paths,
                             self.emit_fields,
                             self.preserve_proto_field_names,
+                            &self.unknown_fields_storage_field,
                         )?
                     }
                 }
