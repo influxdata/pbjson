@@ -20,6 +20,7 @@ pub fn generate_enum<W: Write>(
     descriptor: &EnumDescriptor,
     writer: &mut W,
     use_integers_for_enums: bool,
+    ignore_unknown_enum_variants: bool,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(path);
 
@@ -74,7 +75,13 @@ pub fn generate_enum<W: Write>(
     // Generate Deserialize
     write_deserialize_start(0, &rust_type, writer)?;
     write_fields_array(writer, 2, variants.iter().map(|(name, _, _)| name.as_str()))?;
-    write_visitor(writer, 2, &rust_type, &variants)?;
+    write_visitor(
+        writer,
+        2,
+        &rust_type,
+        &variants,
+        ignore_unknown_enum_variants,
+    )?;
 
     // Use deserialize_any to allow users to provide integers or strings
     writeln!(
@@ -92,7 +99,23 @@ fn write_visitor<W: Write>(
     indent: usize,
     rust_type: &str,
     variants: &[(String, i32, String)],
+    ignore_unknown_enum_variants: bool,
 ) -> Result<()> {
+    // These are what needs to be done for an unknown i32 or string value.
+    let (or_unknown_i32, unknown_string_return) = if ignore_unknown_enum_variants {
+        // If ignore_unknown_enum_variants is set, we will return the default for the enum.
+        (
+            format!(".or_else(|| Some({rust_type}::default()))"),
+            format!("Ok({rust_type}::default())"),
+        )
+    } else {
+        // If ignore_unknown_enum_variants is not set, we will return an Err.
+        (
+            "".into(),
+            "Err(serde::de::Error::unknown_variant(value, FIELDS))".into(),
+        )
+    };
+
     // Protobuf supports deserialization of enumerations both from string and integer values
     writeln!(
         writer,
@@ -111,7 +134,7 @@ fn write_visitor<W: Write>(
 {indent}    {{
 {indent}        i32::try_from(v)
 {indent}            .ok()
-{indent}            .and_then(|x| x.try_into().ok())
+{indent}            .and_then(|x| x.try_into().ok(){or_unknown_i32})
 {indent}            .ok_or_else(|| {{
 {indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
 {indent}            }})
@@ -123,7 +146,7 @@ fn write_visitor<W: Write>(
 {indent}    {{
 {indent}        i32::try_from(v)
 {indent}            .ok()
-{indent}            .and_then(|x| x.try_into().ok())
+{indent}            .and_then(|x| x.try_into().ok(){or_unknown_i32})
 {indent}            .ok_or_else(|| {{
 {indent}                serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
 {indent}            }})
@@ -151,7 +174,7 @@ fn write_visitor<W: Write>(
 
     writeln!(
         writer,
-        "{indent}_ => Err(serde::de::Error::unknown_variant(value, FIELDS)),",
+        "{indent}_ => {unknown_string_return},",
         indent = Indent(indent + 3)
     )?;
     writeln!(writer, "{}}}", Indent(indent + 2))?;

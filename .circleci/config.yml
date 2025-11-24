@@ -142,6 +142,9 @@ jobs:
       - run:
           name: Cargo test (preserve proto field names)
           command: cargo test --workspace --features preserve-proto-field-names
+      - run:
+          name: Cargo test (ignore unknown enum variants)
+          command: cargo test --workspace --features ignore-unknown-enum-variants
       - cache_save
 
   vendor:
