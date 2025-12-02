@@ -1,16 +1,18 @@
 [package]
 name = "pbjson-test"
-version = "0.8.0"
-authors = ["Raphael Taylor-Davies <r.taylordavies@googlemail.com>"]
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
 description = "Test resources for pbjson converion"
-repository = "https://github.com/influxdata/pbjson"
 
 [dependencies]
-prost = "0.14"
-pbjson = { path = "../pbjson" }
-pbjson-types = { path = "../pbjson-types" }
-serde = { version = "1.0", features = ["derive"] }
+prost.workspace = true
+pbjson.workspace = true
+pbjson-types.workspace = true
+serde.workspace = true
 
 [features]
 ignore-unknown-enum-variants = []
@@ -21,9 +23,9 @@ use-integers-for-enums = []
 preserve-proto-field-names = []
 
 [dev-dependencies]
-chrono = "0.4"
-serde_json = "1.0"
+chrono.workspace = true
+serde_json.workspace = true
 
 [build-dependencies]
-prost-build = "0.14"
-pbjson-build = { path = "../pbjson-build" }
+prost-build.workspace = true
+pbjson-build.workspace = true
