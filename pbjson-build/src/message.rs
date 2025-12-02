@@ -5,8 +5,8 @@
 //! message that can be used by the code generation logic
 
 use prost_types::{
-    field_descriptor_proto::{Label, Type},
     FieldDescriptorProto,
+    field_descriptor_proto::{Label, Type},
 };
 
 use crate::descriptor::{Descriptor, DescriptorSet, MessageDescriptor, Syntax, TypeName, TypePath};

@@ -26,8 +26,8 @@ use std::io::{Result, Write};
 use crate::message::{Field, FieldModifier, FieldType, Message, OneOf, ScalarType};
 
 use super::{
-    write_deserialize_end, write_deserialize_start, write_serialize_end, write_serialize_start,
-    Indent,
+    Indent, write_deserialize_end, write_deserialize_start, write_serialize_end,
+    write_serialize_start,
 };
 use crate::descriptor::TypePath;
 use crate::escape::escape_type;

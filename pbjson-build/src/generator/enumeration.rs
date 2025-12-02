@@ -5,8 +5,8 @@
 //! or its integer tag number, and should encode to the string representation
 
 use super::{
-    write_deserialize_end, write_deserialize_start, write_serialize_end, write_serialize_start,
-    Indent,
+    Indent, write_deserialize_end, write_deserialize_start, write_serialize_end,
+    write_serialize_start,
 };
 use crate::descriptor::{EnumDescriptor, TypePath};
 use crate::generator::write_fields_array;
