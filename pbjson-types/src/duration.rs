@@ -1,6 +1,6 @@
 use crate::Duration;
-use serde::de::Visitor;
 use serde::Serialize;
+use serde::de::Visitor;
 
 impl TryFrom<Duration> for std::time::Duration {
     type Error = std::num::TryFromIntError;

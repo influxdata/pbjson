@@ -1,8 +1,8 @@
 //! This module contains code to parse and extract the protobuf descriptor
 //! format for use by the rest of the codebase
 
-use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 use std::fmt::{Display, Formatter};
 use std::io::{Error, ErrorKind, Result};
 

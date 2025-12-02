@@ -22,11 +22,11 @@ pub mod private {
     /// Re-export base64
     pub use base64;
 
+    use base64::Engine;
     use base64::engine::DecodePaddingMode;
     use base64::engine::{GeneralPurpose, GeneralPurposeConfig};
-    use base64::Engine;
-    use serde::de::Visitor;
     use serde::Deserialize;
+    use serde::de::Visitor;
     use std::borrow::Cow;
     use std::str::FromStr;
 

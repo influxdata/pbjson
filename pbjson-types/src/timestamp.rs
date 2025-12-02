@@ -1,7 +1,7 @@
 use crate::Timestamp;
 use chrono::{DateTime, Utc};
-use serde::de::Visitor;
 use serde::Serialize;
+use serde::de::Visitor;
 
 impl TryFrom<Timestamp> for DateTime<Utc> {
     type Error = &'static str;
@@ -69,8 +69,8 @@ impl<'de> serde::Deserialize<'de> for Timestamp {
 mod tests {
     use super::*;
     use chrono::{FixedOffset, TimeZone};
-    use serde::de::value::{BorrowedStrDeserializer, Error};
     use serde::Deserialize;
+    use serde::de::value::{BorrowedStrDeserializer, Error};
 
     #[test]
     fn test_date() {
