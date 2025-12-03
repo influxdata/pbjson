@@ -31,7 +31,7 @@ fn main() -> Result<()> {
         .extern_path(".test.external", "crate")
         .bytes([".test"])
         .protoc_arg("--experimental_allow_proto3_optional")
-        .include_unknown_fields(".", Some("__unknown_fields"));
+        .include_unknown_fields(".", "_unknown_fields");
 
     if cfg!(feature = "btree") {
         prost_config.btree_map([".test"]);
@@ -69,7 +69,7 @@ fn main() -> Result<()> {
         builder.preserve_proto_field_names();
     }
 
-    builder.unknown_fields_storage_field("__unknown_fields");
+    builder.unknown_fields_storage_field("_unknown_fields");
 
     builder.build(&[".test"])?;
 
