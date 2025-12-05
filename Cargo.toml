@@ -25,9 +25,9 @@ itertools = "0.14"
 pbjson = { path = "pbjson", version = "0.8" }
 pbjson-build = { path = "pbjson-build", version = "0.8" }
 pbjson-types = { path = "pbjson-types", version = "0.8" }
-prost = "0.14"
-prost-build = "0.14"
-prost-types = "0.14"
+prost = { git = "https://github.com/blizzardfinnegan/prost.git", rev = "d20b25c7ad45182da894ed7a559f869360c4bc36" }
+prost-build = { git = "https://github.com/blizzardfinnegan/prost.git", rev = "d20b25c7ad45182da894ed7a559f869360c4bc36" }
+prost-types = { git = "https://github.com/blizzardfinnegan/prost.git", rev = "d20b25c7ad45182da894ed7a559f869360c4bc36" }
 rand = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
