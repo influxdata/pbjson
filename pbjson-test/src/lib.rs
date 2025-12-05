@@ -181,13 +181,20 @@ mod tests {
     #[test]
     #[cfg(feature = "ignore-unknown-fields")]
     fn test_ignore_unknown_field() {
-        let message = Empty {};
+        let message = Empty {
+            ..Default::default()
+        };
 
         let encoded = serde_json::to_string(&message).unwrap();
         let _decoded: Empty = serde_json::from_str(&encoded).unwrap();
 
         let empty = serde_json::from_str::<Empty>("{\n \"foo\": \"bar\"\n}").unwrap();
-        assert_eq!(empty, Empty {});
+        assert_eq!(
+            empty,
+            Empty {
+                ..Default::default()
+            }
+        );
     }
 
     #[test]
