@@ -6,6 +6,7 @@ license.workspace = true
 keywords.workspace = true
 categories.workspace = true
 repository.workspace = true
+readme.workspace = true
 description = "Protobuf well known types with serde serialization support"
 exclude = ["protos/*"]
 

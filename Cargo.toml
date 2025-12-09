@@ -15,6 +15,7 @@ license = "MIT"
 keywords = ["protobuf", "json", "serde"]
 categories = ["encoding"]
 repository = "https://github.com/influxdata/pbjson"
+readme = "README.md"
 
 [workspace.dependencies]
 base64 = "0.22"
