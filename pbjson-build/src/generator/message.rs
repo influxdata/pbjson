@@ -42,6 +42,7 @@ pub fn generate_message<W: Write>(
     btree_map_paths: &[String],
     emit_fields: bool,
     preserve_proto_field_names: bool,
+    emit_struct_fields_null: bool,
 ) -> Result<()> {
     let rust_type = resolver.rust_type(&message.path);
 
@@ -54,6 +55,7 @@ pub fn generate_message<W: Write>(
         writer,
         emit_fields,
         preserve_proto_field_names,
+        emit_struct_fields_null,
     )?;
     write_serialize_end(0, writer)?;
 
@@ -116,6 +118,7 @@ fn write_message_serialize<W: Write>(
     writer: &mut W,
     emit_fields: bool,
     preserve_proto_field_names: bool,
+    emit_struct_fields_null: bool,
 ) -> Result<()> {
     write_struct_serialize_start(indent, message, writer, emit_fields)?;
 
@@ -127,6 +130,7 @@ fn write_message_serialize<W: Write>(
             writer,
             emit_fields,
             preserve_proto_field_names,
+            emit_struct_fields_null,
         )?;
     }
 
@@ -404,6 +408,7 @@ fn write_serialize_field<W: Write>(
     writer: &mut W,
     emit_fields: bool,
     preserve_proto_field_names: bool,
+    emit_struct_fields_null: bool,
 ) -> Result<()> {
     let as_ref = format!("&self.{}", field.rust_field_name());
     let variable = Variable {
@@ -443,6 +448,22 @@ fn write_serialize_field<W: Write>(
                 writer,
                 preserve_proto_field_names,
             )?;
+            if emit_struct_fields_null {
+                writeln!(writer, "{}}} else {{", Indent(indent))?;
+
+                let json_name = field.json_name();
+                let field_name = if preserve_proto_field_names {
+                    field.name.as_str()
+                } else {
+                    json_name.as_str()
+                };
+                writeln!(
+                    writer,
+                    "{}struct_ser.serialize_field(\"{}\", &None::<Option<()>>)?;",
+                    Indent(indent + 1),
+                    field_name,
+                )?;
+            }
             writeln!(writer, "{}}}", Indent(indent))?;
         }
         FieldModifier::Repeated | FieldModifier::UseDefault => {
