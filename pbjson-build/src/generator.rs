@@ -39,6 +39,7 @@ fn write_serialize_start<W: Write>(indent: usize, rust_type: &str, writer: &mut 
         writer,
         r#"{indent}impl serde::Serialize for {rust_type} {{
 {indent}    #[allow(deprecated)]
+{indent}    #[allow(unused_variables)]
 {indent}    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
 {indent}    where
 {indent}        S: serde::Serializer,

@@ -264,12 +264,15 @@ fn write_serialize_variable<W: Write>(
                         writer,
                         "{}}}).collect::<std::result::Result<Vec<_>, _>>()",
                         Indent(indent + 1)
-                    )
+                    )?;
+                    writeln!(writer, "?")
                 }
-                _ => write_decode_variant(resolver, indent + 1, variable.as_unref, path, writer),
+                _ => {
+                    write!(writer, "self.{}()", field.rust_field_name())
+                }
             }?;
 
-            writeln!(writer, "?;")?;
+            writeln!(writer, ";")?;
             writeln!(
                 writer,
                 "{}struct_ser.serialize_field(\"{}\", &v)?;",
