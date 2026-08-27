@@ -304,3 +304,57 @@ impl Builder {
         Ok(ret)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use prost_types::{
+        DescriptorProto, EnumDescriptorProto, EnumValueDescriptorProto, FieldDescriptorProto,
+        field_descriptor_proto::{Label, Type},
+    };
+
+    #[test]
+    fn generated_visitors_format_fields_slice_directly() {
+        let file = FileDescriptorProto {
+            package: Some("test".to_string()),
+            syntax: Some("proto3".to_string()),
+            message_type: vec![DescriptorProto {
+                name: Some("Message".to_string()),
+                field: vec![FieldDescriptorProto {
+                    name: Some("value".to_string()),
+                    number: Some(1),
+                    label: Some(Label::Optional as i32),
+                    r#type: Some(Type::String as i32),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            enum_type: vec![EnumDescriptorProto {
+                name: Some("Enumeration".to_string()),
+                value: vec![EnumValueDescriptorProto {
+                    name: Some("ENUMERATION_UNSPECIFIED".to_string()),
+                    number: Some(0),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+
+        let generated = Builder::new()
+            .register_file_descriptor(file)
+            .generate(&[".test"], |_| Ok(Vec::new()))
+            .unwrap()
+            .pop()
+            .unwrap()
+            .1;
+        let generated = String::from_utf8(generated).unwrap();
+
+        assert_eq!(
+            generated
+                .matches(r#"write!(formatter, "expected one of: {:?}", FIELDS)"#)
+                .count(),
+            2
+        );
+    }
+}

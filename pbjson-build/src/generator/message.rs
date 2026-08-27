@@ -710,7 +710,7 @@ fn write_deserialize_field_name<W: Write>(
 {indent}            type Value = GeneratedField;
 
 {indent}            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
-{indent}                write!(formatter, "expected one of: {{:?}}", &FIELDS)
+{indent}                write!(formatter, "expected one of: {{:?}}", FIELDS)
 {indent}            }}
 
 {indent}            #[allow(unused_variables)]
