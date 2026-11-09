@@ -125,7 +125,7 @@ fn write_visitor<W: Write>(
 {indent}    type Value = {rust_type};
 
 {indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
-{indent}        write!(formatter, "expected one of: {{:?}}", &FIELDS)
+{indent}        write!(formatter, "expected one of: {{:?}}", FIELDS)
 {indent}    }}
 
 {indent}    fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
