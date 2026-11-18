@@ -15,7 +15,7 @@ bytes.workspace = true
 chrono.workspace = true
 pbjson.workspace = true
 prost.workspace = true
-serde.workspace = true
+serde = { workspace = true, features = ["std"] }
 
 [dev-dependencies]
 serde_json.workspace = true

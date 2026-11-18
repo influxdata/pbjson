@@ -1,3 +1,7 @@
+// Without `btree_map`, prost and pbjson name `std::collections::HashMap` for map fields, so
+// only the btree build can compile the generated code without std.
+#![cfg_attr(feature = "btree", no_std)]
+
 use serde::{Deserialize, Serialize};
 
 /// A test of an externally defined message
@@ -58,7 +62,11 @@ pub mod test {
 
 #[cfg(test)]
 mod tests {
-    use std::error::Error;
+    extern crate std;
+
+    use core::error::Error;
+    use std::prelude::rust_2024::*;
+    use std::vec;
 
     use super::*;
     use crate::test::syntax3::kitchen_sink::MixedCase;

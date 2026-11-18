@@ -65,6 +65,14 @@
 //! The module will now contain the generated prost structs for your protobuf definition
 //! along with compliant implementations of [serde::Serialize][2] and [serde::Deserialize][3]
 //!
+//! # `no_std`
+//!
+//! The generated code names `core` and the `alloc` crate re-exported by `prost`, never `std`, so
+//! it compiles in a `#![no_std]` crate with an allocator. The `prost` dependency must keep its
+//! name, and `serde` needs its `alloc` feature. Map fields need [`Builder::btree_map`], mirroring
+//! `prost_build::Config::btree_map`, because `HashMap` exists only in `std`. `pbjson-types`
+//! requires `std`.
+//!
 //! [1]: https://docs.rs/prost-build
 //! [2]: https://docs.rs/serde/1.0.130/serde/trait.Serialize.html
 //! [3]: https://docs.rs/serde/1.0.130/serde/trait.Deserialize.html
