@@ -13,7 +13,7 @@ description = "Test resources for pbjson converion"
 prost.workspace = true
 pbjson.workspace = true
 pbjson-types.workspace = true
-serde.workspace = true
+serde = { workspace = true, features = ["std"] }
 
 [features]
 ignore-unknown-enum-variants = []

@@ -124,11 +124,11 @@ fn write_visitor<W: Write>(
 {indent}impl serde::de::Visitor<'_> for GeneratedVisitor {{
 {indent}    type Value = {rust_type};
 
-{indent}    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+{indent}    fn expecting(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {{
 {indent}        write!(formatter, "expected one of: {{:?}}", FIELDS)
 {indent}    }}
 
-{indent}    fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+{indent}    fn visit_i64<E>(self, v: i64) -> ::core::result::Result<Self::Value, E>
 {indent}    where
 {indent}        E: serde::de::Error,
 {indent}    {{
@@ -140,7 +140,7 @@ fn write_visitor<W: Write>(
 {indent}            }})
 {indent}    }}
 
-{indent}    fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+{indent}    fn visit_u64<E>(self, v: u64) -> ::core::result::Result<Self::Value, E>
 {indent}    where
 {indent}        E: serde::de::Error,
 {indent}    {{
@@ -152,7 +152,7 @@ fn write_visitor<W: Write>(
 {indent}            }})
 {indent}    }}
 
-{indent}    fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+{indent}    fn visit_str<E>(self, value: &str) -> ::core::result::Result<Self::Value, E>
 {indent}    where
 {indent}        E: serde::de::Error,
 {indent}    {{"#,

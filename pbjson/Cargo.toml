@@ -10,8 +10,8 @@ readme.workspace = true
 description = "Utilities for pbjson conversion"
 
 [dependencies]
-base64.workspace = true
-serde.workspace = true
+base64 = { workspace = true, features = ["alloc"] }
+serde = { workspace = true, features = ["alloc"] }
 
 [dev-dependencies]
 bytes.workspace = true
