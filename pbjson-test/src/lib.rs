@@ -62,8 +62,7 @@ mod tests {
 
     use super::*;
     use crate::test::syntax3::kitchen_sink::MixedCase;
-    use chrono::TimeZone;
-    use pbjson_types::{Duration, Timestamp};
+    use pbjson_types::Duration;
     use test::syntax3::*;
 
     /// A struct holding the expected json-encoded representation of a test step.
@@ -579,15 +578,12 @@ mod tests {
         decoded.optional_string = None;
         verify_decode(&decoded, "{}");
 
-        let date = chrono::Utc
-            .with_ymd_and_hms(2072, 3, 1, 5, 2, 5)
-            .unwrap()
-            .checked_add_signed(chrono::Duration::milliseconds(30))
-            .unwrap();
-        decoded.timestamp = Some(Timestamp {
-            seconds: date.timestamp(),
-            nanos: date.timestamp_subsec_nanos() as i32,
-        });
+        let date = time::OffsetDateTime::parse(
+            "2072-03-01T05:02:05.030+00:00",
+            &time::format_description::well_known::Rfc3339,
+        )
+        .unwrap();
+        decoded.timestamp = Some(date.into());
 
         verify(&decoded, r#"{"timestamp":"2072-03-01T05:02:05.030+00:00"}"#);
 

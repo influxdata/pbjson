@@ -12,10 +12,10 @@ exclude = ["protos/*"]
 
 [dependencies] # In alphabetical order
 bytes.workspace = true
-chrono.workspace = true
 pbjson.workspace = true
 prost.workspace = true
 serde.workspace = true
+time.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true

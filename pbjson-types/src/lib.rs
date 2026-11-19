@@ -5,6 +5,15 @@
 //! __Note: Coverage of all types is currently incomplete,
 //! some may have non-compliant implementations__
 //!
+//! [`Timestamp`] converts to and from [`time::OffsetDateTime`]:
+//!
+//! ```
+//! let timestamp = pbjson_types::Timestamp::from(time::OffsetDateTime::UNIX_EPOCH);
+//! let datetime = time::OffsetDateTime::try_from(timestamp)?;
+//! assert_eq!(datetime, time::OffsetDateTime::UNIX_EPOCH);
+//! # Ok::<(), &'static str>(())
+//! ```
+//!
 //! [1]: https://docs.rs/serde/1.0.130/serde/trait.Serialize.html
 //! [2]: https://docs.rs/serde/1.0.130/serde/trait.Deserialize.html
 //! [3]: https://developers.google.com/protocol-buffers/docs/proto3#json
