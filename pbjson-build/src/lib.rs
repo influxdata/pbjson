@@ -109,6 +109,7 @@ pub struct Builder {
     use_integers_for_enums: bool,
     ignore_unknown_enum_variants: bool,
     preserve_proto_field_names: bool,
+    emit_struct_field_null: bool,
 }
 
 impl Builder {
@@ -207,6 +208,12 @@ impl Builder {
         self
     }
 
+    /// Output optional struct fields with None value as "null", instead of omitted.
+    pub fn emit_struct_field_null(&mut self) -> &mut Self {
+        self.emit_struct_field_null = true;
+        self
+    }
+
     /// Generates code for all registered types where `prefixes` contains a prefix of
     /// the fully-qualified path of the type
     pub fn build<S: AsRef<str>>(&mut self, prefixes: &[S]) -> Result<()> {
@@ -295,6 +302,7 @@ impl Builder {
                             &self.btree_map_paths,
                             self.emit_fields,
                             self.preserve_proto_field_names,
+                            self.emit_struct_field_null,
                         )?
                     }
                 }
