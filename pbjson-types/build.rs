@@ -12,6 +12,7 @@ fn main() -> Result<()> {
 
     let mut config = prost_build::Config::new();
     config
+        .enable_type_names()
         .file_descriptor_set_path(&descriptor_path)
         .compile_well_known_types()
         .disable_comments(["."])
