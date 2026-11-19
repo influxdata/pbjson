@@ -22,6 +22,7 @@
 //! [1]: https://developers.google.com/protocol-buffers/docs/proto3#json
 
 use std::io::{Result, Write};
+use std::matches;
 
 use crate::message::{Field, FieldModifier, FieldType, Message, OneOf, ScalarType};
 
@@ -77,7 +78,7 @@ fn write_field_empty_predicate<W: Write>(
     writer: &mut W,
     emit_fields: bool,
 ) -> Result<()> {
-    if emit_fields {
+    if matches!(member.field_modifier, FieldModifier::UseDefault) && emit_fields {
         return write!(writer, "true");
     }
 
