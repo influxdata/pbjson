@@ -24,8 +24,8 @@ use-integers-for-enums = []
 preserve-proto-field-names = []
 
 [dev-dependencies]
-chrono.workspace = true
 serde_json.workspace = true
+time.workspace = true
 
 [build-dependencies]
 prost-build.workspace = true

@@ -20,7 +20,6 @@ readme = "README.md"
 [workspace.dependencies]
 base64 = "0.22"
 bytes = "1.0"
-chrono = { version = "0.4", default-features = false, features = ["alloc"] }
 heck = "0.5"
 itertools = "0.14"
 pbjson = { path = "pbjson", version = "0.9" }
@@ -33,3 +32,4 @@ rand = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tempfile = "3.1"
+time = { version = "0.3", default-features = false, features = ["formatting", "parsing", "macros"] }
